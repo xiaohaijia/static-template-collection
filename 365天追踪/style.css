@@ -1,0 +1,191 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #00c6fb;
+    --secondary-color: #005bea;
+    --background-start: #f5f7fa;
+    --background-end: #c3cfe2;
+    --text-color: #2c3e50;
+    --label-color: #7f8c8d;
+    --day-bg-color: #f0f0f0;
+    --tooltip-bg: rgba(0, 0, 0, 0.8);
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+}
+
+.progress-info {
+    margin-bottom: 2rem;
+}
+
+.stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 1.5rem;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.label {
+    display: block;
+    color: #7f8c8d;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.progress-bar {
+    height: 10px;
+    background: #eee;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    width: 0;
+    transition: width 0.5s ease;
+}
+
+.calendar {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
+    gap: 5px;
+    padding: 1rem;
+}
+
+.day {
+    aspect-ratio: 1;
+    border-radius: 5px;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: visible;  /* 修改为 visible 以显示提示框 */
+}
+
+/* 添加提示框样式 */
+.day .tooltip {
+    position: absolute;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%) scale(0);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    pointer-events: none;
+    transition: transform 0.2s ease;
+    z-index: 10;
+}
+
+.day .tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.8);
+}
+
+.day:hover .tooltip {
+    transform: translateX(-50%) scale(1);
+}
+
+/* 增强进度条视觉效果 */
+.day-progress .progress {
+    stroke: var(--primary-color);
+    transition: stroke-dashoffset 0.3s ease;
+    filter: drop-shadow(0 0 2px rgba(0, 198, 251, 0.5));
+}
+
+.day.passed .day-progress .progress {
+    stroke: #005bea;
+    filter: drop-shadow(0 0 3px rgba(0, 91, 234, 0.6));
+}
+
+.day-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.day-progress svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.day-progress circle {
+    fill: none;
+    stroke-width: 8;  /* 增加进度条宽度使其更明显 */
+    stroke-linecap: round;
+}
+
+.day-progress .bg {
+    stroke: #e0e0e0;
+}
+
+.day-progress .progress {
+    stroke: var(--primary-color);
+    transition: stroke-dashoffset 0.3s ease;
+    filter: drop-shadow(0 0 2px rgba(0, 198, 251, 0.5));
+}
+
+.day-content {
+    position: relative;
+    z-index: 1;
+}
+
+.day.passed {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    transform: scale(1.05);
+}
+
+.day:hover {
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>365天进度追踪</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>2025年度进度追踪</h1>
+        <div class="progress-info">
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="label">已过天数</span>
+                    <span class="value" id="daysPassed">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">剩余天数</span>
+                    <span class="value" id="daysLeft">365</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">年度进度</span>
+                    <span class="value" id="progressPercent">0%</span>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress" id="progressBar"></div>
+            </div>
+        </div>
+        <div class="calendar" id="calendar"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
