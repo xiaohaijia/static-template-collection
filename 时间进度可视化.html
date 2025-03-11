@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时间进度可视化</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .progress-item {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .title {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .percentage {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        /* 圆形进度样式 */
+        .circle-progress {
+            width: 120px;
+            height: 120px;
+            position: relative;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .circle-progress svg {
+            transform: rotate(-90deg);
+        }
+
+        .circle-progress circle {
+            fill: none;
+            stroke-width: 8;
+        }
+
+        .circle-bg {
+            stroke: #eee;
+        }
+
+        .circle-value {
+            stroke: #4CAF50;
+            transition: stroke-dashoffset 0.3s;
+        }
+
+        /* 电池进度样式 */
+        .battery-progress {
+            width: 100px;
+            height: 50px;
+            border: 3px solid #333;
+            border-radius: 5px;
+            position: relative;
+            margin-top: 10px;
+        }
+
+        .battery-progress::after {
+            content: '';
+            position: absolute;
+            right: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 5px;
+            height: 15px;
+            background: #333;
+            border-radius: 0 3px 3px 0;
+        }
+
+        .battery-level {
+            height: 100%;
+            transition: width 0.3s, background-color 0.3s;
+        }
+
+        .battery-level.high {
+            background: #4CAF50;
+        }
+
+        .battery-level.medium {
+            background: #FFC107;
+        }
+
+        .switch-btn {
+            margin: 20px 0;
+            padding: 12px 24px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background: white;
+            color: #333;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .switch-btn.dark {
+            background: #333;
+            color: white;
+        }
+
+        .switch-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 设置按钮样式 */
+        .settings-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+
+        .settings-btn:hover {
+            transform: rotate(45deg);
+        }
+
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .settings-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 10px;
+        }
+
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .color-option.active {
+            border-color: #333;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="switch-btn" onclick="toggleDisplayMode()">切换显示模式</button>
+    <button class="settings-btn" onclick="openSettings()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+    </button>
+    <div class="container" id="container"></div>
+
+    <!-- 设置模态框 -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeSettings()">&times;</button>
+            <h2 style="margin-bottom: 20px;">设置</h2>
+            <form class="settings-form" id="settingsForm">
+                <div class="form-group">
+                    <label for="birthDate">出生日期</label>
+                    <input type="date" id="birthDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="displayMode">显示模式</label>
+                    <select id="displayMode">
+                        <option value="circle">圆形进度</option>
+                        <option value="battery">电池进度</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>进度条颜色</label>
+                    <div class="color-picker" id="colorPicker">
+                        <div class="color-option active" style="background: #4CAF50" data-color="#4CAF50"></div>
+                        <div class="color-option" style="background: #2196F3" data-color="#2196F3"></div>
+                        <div class="color-option" style="background: #FFC107" data-color="#FFC107"></div>
+                        <div class="color-option" style="background: #E91E63" data-color="#E91E63"></div>
+                    </div>
+                </div>
+                <button type="submit" class="switch-btn" style="margin: 20px 0 0;">保存设置</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let isCircleMode = true;
+        let progressColor = '#4CAF50';
+        let birthDate = new Date('2001-05-21');
+        
+        function calculateAge(birthDate) {
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age;
+        }
+
+        function calculateProgress() {
+            const now = new Date();
+            const userAge = calculateAge(birthDate);
+            
+            // 计算一生进度（假设平均寿命85岁）
+            const lifeProgress = (userAge / 85 * 100).toFixed(1);
+            
+            // 计算今年进度
+            const yearStart = new Date(now.getFullYear(), 0, 1);
+            const yearEnd = new Date(now.getFullYear() + 1, 0, 1);
+            const yearProgress = ((now - yearStart) / (yearEnd - yearStart) * 100).toFixed(1);
+            
+            // 计算本月进度
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+            const monthProgress = ((now - monthStart) / (monthEnd - monthStart) * 100).toFixed(1);
+            
+            // 计算本周进度
+            const weekDay = now.getDay() || 7;
+            const weekStart = new Date(now - (weekDay - 1) * 86400000);
+            const weekProgress = ((now - weekStart) / (7 * 86400000) * 100).toFixed(1);
+            
+            return [
+                { id: 'lifetime', title: '一生', value: parseFloat(lifeProgress), age: userAge },
+                { id: 'year', title: '今年', value: parseFloat(yearProgress), age: userAge },
+                { id: 'month', title: '本月', value: parseFloat(monthProgress), age: userAge },
+                { id: 'week', title: '本周', value: parseFloat(weekProgress), age: userAge }
+            ];
+        }
+
+        let timeData = calculateProgress();
+
+        // 每秒更新进度
+        setInterval(() => {
+            timeData = calculateProgress();
+            updateDisplay();
+        }, 1000);
+
+        function createCircleProgress(value, age) {
+            const circumference = 2 * Math.PI * 54;
+            const offset = circumference - (value / 100) * circumference;
+            return `
+                <div class="circle-progress">
+                    <svg width="120" height="120">
+                        <circle class="circle-bg" cx="60" cy="60" r="54" />
+                        <circle class="circle-value" cx="60" cy="60" r="54"
+                            stroke="${progressColor}"
+                            stroke-dasharray="${circumference}"
+                            stroke-dashoffset="${offset}" />
+                    </svg>
+                    <div class="user-avatar">${age}岁</div>
+                </div>
+            `;
+        }
+
+        function createBatteryProgress(value) {
+            const levelClass = value >= 50 ? 'high' : 'medium';
+            return `
+                <div class="battery-progress">
+                    <div class="battery-level ${levelClass}" 
+                         style="width: ${value}%; background-color: ${progressColor}"></div>
+                </div>
+            `;
+        }
+
+        function updateDisplay() {
+            const container = document.getElementById('container');
+            container.innerHTML = timeData.map(item => `
+                <div class="progress-item">
+                    <div class="title">${item.title}</div>
+                    <div class="percentage">${item.value}%</div>
+                    ${isCircleMode ? createCircleProgress(item.value, item.age) : createBatteryProgress(item.value)}
+                </div>
+            `).join('');
+        }
+
+        function toggleDisplayMode() {
+            isCircleMode = !isCircleMode;
+            const btn = document.querySelector('.switch-btn');
+            btn.classList.toggle('dark');
+            document.getElementById('displayMode').value = isCircleMode ? 'circle' : 'battery';
+            updateDisplay();
+        }
+
+        function openSettings() {
+            const modal = document.getElementById('settingsModal');
+            const form = document.getElementById('settingsForm');
+            form.birthDate.value = birthDate.toISOString().split('T')[0];
+            form.displayMode.value = isCircleMode ? 'circle' : 'battery';
+            modal.classList.add('active');
+        }
+
+        function closeSettings() {
+            const modal = document.getElementById('settingsModal');
+            modal.classList.remove('active');
+        }
+
+        // 初始化颜色选择器
+        function initColorPicker() {
+            const colorOptions = document.querySelectorAll('.color-option');
+            colorOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    colorOptions.forEach(opt => opt.classList.remove('active'));
+                    option.classList.add('active');
+                    progressColor = option.dataset.color;
+                    updateDisplay();
+                });
+            });
+        }
+
+        // 保存设置
+        document.getElementById('settingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newBirthDate = new Date(this.birthDate.value);
+            if (!isNaN(newBirthDate.getTime())) {
+                birthDate = newBirthDate;
+                const newDisplayMode = this.displayMode.value;
+                isCircleMode = newDisplayMode === 'circle';
+                
+                // 更新时间数据
+                timeData = calculateProgress();
+                
+                // 更新显示
+                updateDisplay();
+            }
+            closeSettings();
+        });
+
+        // 初始化显示
+        initColorPicker();
+        updateDisplay();
+    </script>
+</body>
+</html>
