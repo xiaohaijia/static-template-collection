@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2025年时间可视化</title>
+    <style>
+        :root {
+            --past-color: #9333ea;
+            --future-color: #e9d5ff;
+            --title-color: #9333ea;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            background-color: #faf5ff;
+        }
+
+        h1 {
+            color: var(--title-color);
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .month {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .month-title {
+            color: var(--title-color);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            width: 100%;
+        }
+
+        .day {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background-color: var(--future-color);
+            transition: background-color 0.3s ease;
+        }
+
+        .day.past {
+            background-color: var(--past-color);
+        }
+
+        .progress-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring circle {
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .progress-ring .background {
+            stroke: rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-ring .progress {
+            stroke: var(--past-color);
+            transition: stroke-dashoffset 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <h1>2025 Calendar</h1>
+    <div class="calendar" id="calendar"></div>
+
+    <script>
+        function createCalendar() {
+            const calendar = document.getElementById('calendar');
+            const months = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+            const today = new Date();
+            const year2025 = new Date('2025-01-01');
+
+            months.forEach((monthName, monthIndex) => {
+                const monthElement = document.createElement('div');
+                monthElement.className = 'month';
+
+                const monthTitle = document.createElement('div');
+                monthTitle.className = 'month-title';
+                monthTitle.textContent = `${monthName} 2025`;
+
+                const daysContainer = document.createElement('div');
+                daysContainer.className = 'days';
+
+                const totalDays = daysInMonth[monthIndex];
+                for (let day = 1; day <= totalDays; day++) {
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'day';
+
+                    const currentDate = new Date(2025, monthIndex, day);
+                    const now = new Date();
+                    
+                    if (now > currentDate) {
+                        dayElement.classList.add('past');
+                    }
+
+                    daysContainer.appendChild(dayElement);
+                }
+
+                monthElement.appendChild(monthTitle);
+                monthElement.appendChild(daysContainer);
+                calendar.appendChild(monthElement);
+            });
+        }
+
+        createCalendar();
+    </script>
+</body>
+</html>
