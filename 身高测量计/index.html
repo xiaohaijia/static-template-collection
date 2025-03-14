@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>儿童身高测量计</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="height-meter">
+            <div class="meter-tube">
+                <div class="meter-liquid" id="heightLiquid">
+                    <div class="height-value" id="heightValue">0cm</div>
+                </div>
+            </div>
+            <div class="meter-scale">
+                <!-- 刻度将通过JS动态生成 -->
+            </div>
+        </div>
+        
+        <div class="controls">
+            <input type="number" id="childHeight" min="40" max="200" step="0.1" value="100" placeholder="输入身高(cm)">
+            <button id="measureBtn">测量身高</button>
+        </div>
+    </div>
+    
+    <script src="./script.js"></script>
+</body>
+</html>

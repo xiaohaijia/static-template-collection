@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日志树</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .log-tree {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            position: relative;
+            min-height: 90vh;
+        }
+
+        .tree-trunk {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 20px;
+            height: calc(100% - 60px);
+            background: linear-gradient(to top, #8B4513, #A0522D);
+            transform: translateX(-50%);
+            border-radius: 10px;
+            box-shadow: inset -5px 0 10px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        .tree-trunk::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 30px;
+            background: #8B4513;
+            border-radius: 40px 40px 0 0;
+        }
+
+        .log-timeline {
+            position: relative;
+            width: 100%;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .log-item {
+            position: relative;
+            width: calc(50% - 40px);
+            padding: 20px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.6s ease-out forwards;
+            margin-left: 0;
+            margin-right: auto;
+            z-index: 0;
+        }
+
+        .log-item:nth-child(even) {
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        .log-timeline > .log-item::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 20px;
+            height: 3px;
+            background: #A0522D;
+            transform: translateY(-50%);
+        }
+
+        .log-timeline > .log-item:nth-child(odd)::before {
+            right: -20px;
+            background: linear-gradient(to left, #A0522D, #8B4513);
+        }
+
+        .log-timeline > .log-item:nth-child(even)::before {
+            left: -20px;
+            background: linear-gradient(to right, #A0522D, #8B4513);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .log-time {
+            font-size: 14px;
+            color: #8B4513;
+            margin-bottom: 10px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+
+        .log-time::before {
+            content: '🕒';
+            margin-right: 6px;
+        }
+
+        .log-content {
+            font-size: 16px;
+            color: #2c3e50;
+            line-height: 1.6;
+            position: relative;
+            padding-left: 24px;
+            padding-right: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .log-content::before {
+            content: '📝';
+            position: absolute;
+            left: 0;
+            top: 2px;
+        }
+
+        .log-content::after {
+            content: '';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            width: 12px;
+            height: 12px;
+            border-right: 2px solid #8B4513;
+            border-bottom: 2px solid #8B4513;
+            transform: translateY(-70%) rotate(45deg);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0.7;
+        }
+
+        .log-content:hover::after {
+            opacity: 1;
+        }
+
+        .log-content.expanded::after {
+            transform: translateY(-30%) rotate(-135deg);
+        }
+
+        .log-content:hover::after {
+            opacity: 1;
+        }
+
+        .log-content.expanded::after {
+            transform: translateY(-50%) rotate(180deg);
+        }
+
+        .log-detail {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #666;
+            display: none;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .log-detail.show {
+            display: block;
+            opacity: 1;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="log-tree">
+        <div class="tree-trunk"></div>
+        <div class="log-timeline" id="logTimeline">
+            <!-- 日志内容将通过JavaScript动态生成 -->
+        </div>
+    </div>
+
+    <script>
+        // 示例日志数据
+        const logData = [
+            {
+                time: '2024-01-20 10:00:00',
+                content: '开始数据清洗任务',
+                detail: '初始化数据清洗流程，准备所需的清洗工具和环境配置。设置数据清洗参数，包括清洗规则和过滤条件。'
+            },
+            {
+                time: '2024-01-20 10:00:05',
+                content: '加载数据源文件',
+                detail: '从指定路径加载原始数据文件，文件大小：2.5GB，格式：CSV，包含1000万条记录。验证文件完整性和格式正确性。'
+            },
+            {
+                time: '2024-01-20 10:00:10',
+                content: '数据预处理',
+                detail: '对原始数据进行初步处理，包括去除特殊字符、统一日期格式、处理编码问题等。检测并标记异常数据项。'
+            },
+            {
+                time: '2024-01-20 10:00:15',
+                content: '移除空值记录',
+                detail: '扫描并处理数据中的空值记录。发现空值记录数：15,000条，占总数据量的0.15%。根据业务规则决定删除或填充默认值。'
+            },
+            {
+                time: '2024-01-20 10:00:20',
+                content: '标准化数据格式',
+                detail: '统一数据格式，包括日期格式化、数值精度调整、字符串规范化等。处理异常值和离群值，确保数据质量。'
+            },
+            {
+                time: '2024-01-20 10:01:00',
+                content: '完成数据清洗',
+                detail: '数据清洗流程全部完成。处理后的数据量：985万条，数据质量提升30%，异常值处理率达到99.9%。'
+            },
+            {
+                time: '2024-01-20 10:01:05',
+                content: '生成清洗报告',
+                detail: '生成数据清洗详细报告，包含清洗过程中的各项统计指标、异常处理记录和数据质量评估结果。报告已保存至指定路径。'
+            }
+        ];
+
+        // 创建日志树节点的函数
+        function createLogNode(log) {
+            const logItem = document.createElement('div');
+            logItem.className = 'log-item';
+
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'log-time';
+            timeDiv.textContent = log.time;
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'log-content';
+            contentDiv.textContent = log.content;
+
+            const detailDiv = document.createElement('div');
+            detailDiv.className = 'log-detail';
+            detailDiv.textContent = log.detail;
+
+            logItem.appendChild(timeDiv);
+            logItem.appendChild(contentDiv);
+            logItem.appendChild(detailDiv);
+
+            // 添加点击事件处理
+            contentDiv.addEventListener('click', () => {
+                contentDiv.classList.toggle('expanded');
+                detailDiv.classList.toggle('show');
+            });
+
+            return logItem;
+        }
+
+        // 渲染日志树
+        function renderLogTree(data) {
+            const timeline = document.getElementById('logTimeline');
+            const reversedData = [...data].reverse();
+            reversedData.forEach(log => {
+                timeline.appendChild(createLogNode(log));
+            });
+        }
+
+        // 初始化日志树
+        renderLogTree(logData);
+    </script>
+</body>
+</html>

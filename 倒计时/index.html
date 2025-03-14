@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我们在一起的时光</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>爱情计时器</h1>
+            <p class="subtitle">记录每一个值得纪念的时刻</p>
+        </header>
+
+        <section class="setup-section" id="setup-section">
+            <h2>设置你们的纪念日</h2>
+            <div class="input-group">
+                <label for="together-date">在一起的日期：</label>
+                <input type="date" id="together-date" value="2025-02-15" required>
+            </div>
+            <div class="input-group">
+                <label for="birthday1">Ta的生日：</label>
+                <input type="date" id="birthday1" value="2004-06-28" required>
+            </div>
+            <div class="input-group">
+                <label for="birthday2">你的生日：</label>
+                <input type="date" id="birthday2" value="2001-05-21" required>
+            </div>
+            <button id="save-dates" class="btn">保存</button>
+        </section>
+
+        <section class="main-content" id="main-content" style="display: none;">
+            <div class="card together-days">
+                <h2>我们已经在一起</h2>
+                <div class="counter">
+                    <span id="days-together">0</span>
+                    <span class="unit">天</span>
+                </div>
+                <div class="detail-time">
+                    <span id="hours-together">0</span>时
+                    <span id="minutes-together">0</span>分
+                    <span id="seconds-together">0</span>秒
+                </div>
+            </div>
+
+            <div class="cards-container">
+                <div class="card upcoming-events">
+                    <h2>即将到来的纪念日</h2>
+                    <ul id="upcoming-events-list">
+                        <!-- 动态填充 -->
+                    </ul>
+                </div>
+
+                <div class="card milestones">
+                    <h2>爱情里程碑</h2>
+                    <ul id="milestones-list">
+                        <!-- 动态填充 -->
+                    </ul>
+                </div>
+            </div>
+
+            <div class="cards-container">
+                <div class="card mood-tracker">
+                    <h2>心情记录</h2>
+                    <div class="mood-input">
+                        <textarea id="mood-text" placeholder="今天的心情如何？"></textarea>
+                        <div class="mood-emojis">
+                            <span class="emoji" data-mood="happy">😊</span>
+                            <span class="emoji" data-mood="love">😍</span>
+                            <span class="emoji" data-mood="sad">😢</span>
+                            <span class="emoji" data-mood="angry">😠</span>
+                            <span class="emoji" data-mood="neutral">😐</span>
+                        </div>
+                        <button id="save-mood" class="btn">保存</button>
+                    </div>
+                    <div class="mood-history" id="mood-history">
+                        <!-- 动态填充 -->
+                    </div>
+                </div>
+
+                <div class="card goals">
+                    <h2>我们的目标</h2>
+                    <div class="goal-input">
+                        <input type="text" id="goal-text" placeholder="添加一个共同目标...">
+                        <button id="add-goal" class="btn">添加</button>
+                    </div>
+                    <ul id="goals-list">
+                        <!-- 动态填充 -->
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card memory-wall">
+                <h2>美好回忆墙</h2>
+                <div class="memory-upload">
+                    <label for="memory-upload" class="btn"><i class="fas fa-plus"></i> 添加照片</label>
+                    <input type="file" id="memory-upload" accept="image/*" style="display: none;">
+                </div>
+                <div class="memories-container" id="memories-container">
+                    <!-- 动态填充 -->
+                </div>
+            </div>
+
+            <div class="card custom-events">
+                <h2>自定义纪念日</h2>
+                <div class="custom-event-input">
+                    <input type="text" id="event-name" placeholder="事件名称">
+                    <input type="date" id="event-date">
+                    <div class="event-annual-option">
+                        <input type="checkbox" id="event-annual" name="event-annual">
+                        <label for="event-annual">每年纪念</label>
+                    </div>
+                    <button id="add-event" class="btn">添加</button>
+                </div>
+                <ul id="custom-events-list">
+                    <!-- 动态填充 -->
+                </ul>
+            </div>
+
+            <div class="card love-letter">
+                <h2>给Ta的一封信</h2>
+                <textarea id="love-letter-text" placeholder="写下你想对Ta说的话..."></textarea>
+                <button id="save-letter" class="btn">保存</button>
+                <div id="saved-letters">
+                    <!-- 动态填充 -->
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>❤️ 用心记录每一刻 ❤️</p>
+            <div class="theme-selector" id="theme-selector">
+                <h3>选择主题</h3>
+                <div class="theme-options">
+                    <div class="theme-option active" data-theme="default" title="默认主题" style="background-color: #ff6b6b;"></div>
+                    <div class="theme-option" data-theme="blue" title="蓝色主题" style="background-color: #4e73df;"></div>
+                    <div class="theme-option" data-theme="green" title="绿色主题" style="background-color: #1cc88a;"></div>
+                    <div class="theme-option" data-theme="purple" title="紫色主题" style="background-color: #8a63d2;"></div>
+                    <div class="theme-option" data-theme="dark" title="暗黑模式" style="background-color: #343a40;"></div>
+                </div>
+            </div>
+            <div class="data-actions">
+                <button id="export-data" class="btn btn-small">导出数据</button>
+                <button id="reset-data" class="btn btn-small">重置数据</button>
+            </div>
+            <div class="import-data-container">
+                <label for="import-data" class="import-label">导入数据</label>
+                <input type="file" id="import-data" accept=".json" style="display: none;">
+            </div>
+        </footer>
+    </div>
+
+    <div class="notification" id="notification">
+        <span id="notification-message"></span>
+        <button id="close-notification">×</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

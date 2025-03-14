@@ -1,0 +1,635 @@
+/* 全局样式 */
+:root {
+    --primary-color: #ff6b6b;
+    --background-color: rgba(255, 240, 240, 0.7);
+    --card-color: rgba(255, 255, 255, 0.7);
+    --text-color: #333333;
+    --border-color: rgba(255, 107, 107, 0.2);
+    --shadow-color: rgba(255, 107, 107, 0.2);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    background-color: var(--background-color);
+    background-image: linear-gradient(135deg, #ffedee 0%, #ffd8d8 100%);
+    background-attachment: fixed;
+    color: var(--text-color);
+    line-height: 1.6;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 标题样式 */
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px 0;
+    border-bottom: 2px solid var(--primary-color);
+    background-color: var(--card-color);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 5px 15px var(--shadow-color);
+    margin-top: 10px;
+}
+
+h1 {
+    color: var(--primary-color);
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    text-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.subtitle {
+    color: #666;
+    font-size: 1.2rem;
+}
+
+h2 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+    text-shadow: 0 1px 2px var(--shadow-color);
+}
+
+/* 按钮样式 */
+.btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px var(--shadow-color);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+.btn:hover {
+    background-color: var(--primary-color);
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px var(--shadow-color);
+}
+
+.btn-small {
+    padding: 5px 10px;
+    font-size: 0.9rem;
+}
+
+/* 设置部分 */
+.setup-section {
+    background-color: var(--card-color);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px var(--shadow-color);
+    margin-bottom: 30px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+/* 卡片样式 */
+.card {
+    background-color: var(--card-color);
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px var(--shadow-color);
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px var(--shadow-color);
+}
+
+.cards-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.cards-container .card {
+    flex: 1;
+    min-width: 300px;
+}
+
+/* 计数器样式 */
+.together-days {
+    text-align: center;
+    padding: 30px;
+}
+
+.counter {
+    font-size: 4rem;
+    font-weight: bold;
+    color: #ff6b6b;
+    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+}
+
+.unit {
+    font-size: 2rem;
+    margin-left: 10px;
+}
+
+.detail-time {
+    font-size: 1.2rem;
+    color: #666;
+}
+
+/* 列表样式 */
+ul {
+    list-style-type: none;
+}
+
+li {
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+li:last-child {
+    border-bottom: none;
+}
+
+/* 心情记录样式 */
+.mood-input {
+    margin-bottom: 20px;
+}
+
+.mood-input textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    height: 100px;
+    resize: none;
+    margin-bottom: 10px;
+}
+
+.mood-emojis {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 10px;
+}
+
+.emoji {
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.emoji:hover {
+    transform: scale(1.2);
+}
+
+.emoji.selected {
+    transform: scale(1.2);
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
+}
+
+.mood-history {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.mood-entry {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.mood-entry .date {
+    font-size: 0.8rem;
+    color: #999;
+}
+
+/* 目标样式 */
+.goal-input {
+    display: flex;
+    margin-bottom: 15px;
+}
+
+.goal-input input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px 0 0 5px;
+}
+
+.goal-input button {
+    border-radius: 0 5px 5px 0;
+}
+
+.goal-item {
+    display: flex;
+    align-items: center;
+}
+
+.goal-item input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+.goal-item.completed span {
+    text-decoration: line-through;
+    color: #999;
+}
+
+/* 回忆墙样式 */
+.memories-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.memory-item {
+    position: relative;
+    height: 150px;
+    overflow: hidden;
+    border-radius: 5px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.memory-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.memory-item:hover img {
+    transform: scale(1.05);
+}
+
+.memory-item .memory-date {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 5px;
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+/* 自定义事件样式 */
+.custom-event-input {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+    align-items: center;
+}
+
+.custom-event-input input {
+    flex: 1;
+    min-width: 150px;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+}
+
+.event-annual-option {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0 10px;
+}
+
+.event-annual-option input[type="checkbox"] {
+    width: auto;
+    margin-right: 5px;
+}
+
+/* 爱情信件样式 */
+.love-letter textarea {
+    width: 100%;
+    height: 150px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    resize: none;
+    margin-bottom: 10px;
+}
+
+.letter-entry {
+    background-color: #fff9f9;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    border-left: 3px solid #ff6b6b;
+}
+
+.letter-entry .date {
+    font-size: 0.8rem;
+    color: #999;
+    margin-bottom: 5px;
+}
+
+/* 页脚样式 */
+footer {
+    text-align: center;
+    margin-top: 30px;
+    padding: 20px 0;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-color);
+    background-color: var(--card-color);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 -5px 15px var(--shadow-color);
+}
+
+/* 数据操作按钮容器 */
+.data-actions {
+    margin: 15px 0;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* 通知样式 */
+.notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: rgba(255, 107, 107, 0.8);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    display: none;
+    z-index: 1000;
+    max-width: 300px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#close-notification {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    position: absolute;
+    top: 5px;
+    right: 10px;
+}
+
+/* 主题选择器样式 */
+.theme-selector {
+    margin: 20px 0;
+    text-align: center;
+    background-color: var(--card-color);
+    padding: 15px;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 4px 12px var(--shadow-color);
+    border: 1px solid var(--border-color);
+}
+
+.theme-options {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.theme-option {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    box-shadow: 0 2px 5px var(--shadow-color);
+}
+
+.theme-option:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px var(--shadow-color);
+}
+
+.theme-option.active {
+    border-color: #fff;
+    transform: scale(1.1);
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+/* 主题样式 */
+.theme-default {
+    --primary-color: #ff6b6b;
+    --background-color: rgba(255, 240, 240, 0.7);
+    --card-color: rgba(255, 255, 255, 0.7);
+    --text-color: #333333;
+    --border-color: rgba(255, 107, 107, 0.2);
+    --shadow-color: rgba(255, 107, 107, 0.2);
+}
+
+.theme-blue {
+    --primary-color: #4e73df;
+    --background-color: rgba(240, 245, 255, 0.7);
+    --card-color: rgba(255, 255, 255, 0.7);
+    --text-color: #333333;
+    --border-color: rgba(78, 115, 223, 0.2);
+    --shadow-color: rgba(78, 115, 223, 0.2);
+}
+
+.theme-green {
+    --primary-color: #1cc88a;
+    --background-color: rgba(240, 255, 245, 0.7);
+    --card-color: rgba(255, 255, 255, 0.7);
+    --text-color: #333333;
+    --border-color: rgba(28, 200, 138, 0.2);
+    --shadow-color: rgba(28, 200, 138, 0.2);
+}
+
+.theme-purple {
+    --primary-color: #8a63d2;
+    --background-color: rgba(245, 240, 255, 0.7);
+    --card-color: rgba(255, 255, 255, 0.7);
+    --text-color: #333333;
+    --border-color: rgba(138, 99, 210, 0.2);
+    --shadow-color: rgba(138, 99, 210, 0.2);
+}
+
+.theme-dark {
+    --primary-color: #6c5ce7;
+    --background-color: rgba(45, 52, 54, 0.8);
+    --card-color: rgba(52, 58, 64, 0.7);
+    --text-color: #ffffff;
+    --border-color: rgba(108, 92, 231, 0.3);
+    --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+/* 照片墙动画效果 */
+.memory-item {
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.memory-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* 照片模态框样式 */
+.memory-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    animation: fadeIn 0.3s forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.memory-modal-content {
+    position: relative;
+    max-width: 80%;
+    max-height: 80%;
+    animation: zoomIn 0.3s;
+}
+
+@keyframes zoomIn {
+    from { transform: scale(0.8); }
+    to { transform: scale(1); }
+}
+
+.memory-modal-content img {
+    max-width: 100%;
+    max-height: 80vh;
+    border-radius: 5px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+}
+
+.close-modal {
+    position: absolute;
+    top: -30px;
+    right: 0;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+.memory-modal-date {
+    color: white;
+    text-align: center;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+/* 数据导出按钮样式 */
+#export-data {
+    background-color: var(--primary-color);
+    margin-right: 10px;
+}
+
+/* 导入数据按钮样式 */
+.import-data-container {
+    margin-top: 10px;
+    text-align: center;
+}
+
+.import-label {
+    display: inline-block;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.3s;
+}
+
+.import-label:hover {
+    background-color: #ff4757;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .cards-container {
+        flex-direction: column;
+    }
+    
+    .cards-container .card {
+        min-width: 100%;
+    }
+    
+    .counter {
+        font-size: 3rem;
+    }
+    
+    .unit {
+        font-size: 1.5rem;
+    }
+    
+    .custom-event-input {
+        flex-direction: column;
+    }
+    
+    .memories-container {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+    
+    .theme-options {
+        flex-wrap: wrap;
+    }
+}
