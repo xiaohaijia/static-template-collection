@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    .toggle-switch:checked {
+      /* 开关选中时的样式 */
+      background-color: #4caf50;
+    }
+
+    :root {
+      --background-color: #2c3e50;
+      --border-color: #7591AD;
+      --text-color: #34495e;
+      --color1: #EC3E27;
+      --color3: #0984e3;
+      --color8: #BDC581;
+    }
+
+    #switch {
+      position: absolute;
+      width: 60px;
+      height: 30px;
+      border: 2px solid #333;
+      border-radius: 30px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 5px;
+    }
+
+    #switch::before,
+    #switch::after {
+      position: absolute;
+      line-height: 26px;
+      text-transform: uppercase;
+      padding: 0 15px;
+      cursor: initial;
+      pointer-events: none;
+    }
+
+    #switch #circle {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #333;
+      border-radius: 50%;
+      box-shadow: inset 4px -2px 0 0 var(--color8);
+      transition: all .5s cubic-bezier(.74, 1.28, .73, .99);
+    }
+
+    #switch.switched #circle {
+      left: calc(100% - 20px - 10px);
+      box-shadow: inset 15px -2px 0 0 var(--color3);
+    }
+
+    #switch.switched::before {
+      display: block;
+      /* Show when switched */
+      content: '关';
+      left: 0px;
+    }
+
+    #switch.switched::after {
+      display: none;
+      /* Hide when switched */
+    }
+
+    #switch:not(.switched)::before {
+      display: none;
+      /* Hide when not switched */
+    }
+
+    #switch:not(.switched)::after {
+      display: block;
+      /* Show when not switched */
+      content: '开';
+      right: 0px;
+    }
+    #chen {
+      width: 100px;
+      height: 100px;
+      /* background-color: #00b894; */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid red;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="chen">
+    <div id="switch">
+      <div id="circle"></div>
+    </div>
+  </div>
+
+  <script>
+    let swch = document.getElementById('switch');
+    swch.addEventListener('click', (e) => {
+      swch.classList.toggle('switched');
+      // if(swch.classList.contains('switched')){
+      //     swch.classList.remove('switched');
+      // } else{
+      //     swch.classList.add('switched');
+      // }
+    });
+  </script>
+</body>
+
+</html>
