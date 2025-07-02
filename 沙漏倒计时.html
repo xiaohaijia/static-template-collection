@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>24小时沙漏倒计时</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: white;
+            margin: 0;
+            flex-direction: column;
+        }
+        
+        .hourglass-container {
+            position: relative;
+            width: 150px;
+            height: 250px;
+            margin-bottom: 20px;
+        }
+        
+        .hourglass {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .glass {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #8B4513 0%, #8B4513 10%, #f8f8f8 10%, #f8f8f8 90%, #8B4513 90%, #8B4513 100%);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .top-sand, .bottom-sand {
+            position: absolute;
+            width: 80%;
+            left: 10%;
+        }
+        
+        .top-sand {
+            top: 15%;
+            height: 35%;
+            background-color: #FFA500;
+            border-radius: 0 0 50% 50%;
+        }
+        
+        .bottom-sand {
+            bottom: 15%;
+            height: 0%;
+            background-color: #FFA500;
+            border-radius: 50% 50% 0 0;
+        }
+        
+        .neck {
+            position: absolute;
+            width: 30%;
+            height: 10%;
+            background-color: #f8f8f8;
+            left: 35%;
+            top: 45%;
+            border-radius: 0 0 5px 5px;
+        }
+        
+        .falling-sand {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #FFA500;
+            border-radius: 50%;
+            left: 45%;
+            top: 45%;
+            animation: fall 1s linear infinite;
+        }
+        
+        @keyframes fall {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(100px); opacity: 0; }
+        }
+        
+        .timer-display {
+            font-size: 1.5rem;
+            color: #333;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="hourglass-container">
+        <div class="hourglass">
+            <div class="glass"></div>
+            <div class="top-sand" id="topSand"></div>
+            <div class="neck"></div>
+            <div class="bottom-sand" id="bottomSand"></div>
+            <div class="falling-sand"></div>
+        </div>
+    </div>
+    
+    <div class="timer-display" id="timer"></div>
+
+    <script>
+        const topSand = document.getElementById('topSand');
+        const bottomSand = document.getElementById('bottomSand');
+        const timerDisplay = document.getElementById('timer');
+        
+        function updateHourglass() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            
+            // 计算当天已过去的秒数
+            const secondsPassed = hours * 3600 + minutes * 60 + seconds;
+            // 计算剩余秒数（24小时制）
+            const secondsRemaining = 24 * 3600 - secondsPassed;
+            
+            // 更新时间显示
+            const displayHours = Math.floor(secondsRemaining / 3600);
+            const displayMinutes = Math.floor((secondsRemaining % 3600) / 60);
+            const displaySeconds = secondsRemaining % 60;
+            
+            timerDisplay.textContent = `${displayHours.toString().padStart(2, '0')}:${displayMinutes.toString().padStart(2, '0')}:${displaySeconds.toString().padStart(2, '0')}`;
+            
+            // 更新沙漏沙子位置（基于24小时比例）
+            const percentRemaining = secondsRemaining / (24 * 3600);
+            topSand.style.height = `${35 * percentRemaining}%`;
+            bottomSand.style.height = `${35 * (1 - percentRemaining)}%`;
+        }
+        
+        // 初始更新
+        updateHourglass();
+        // 每秒更新一次
+        setInterval(updateHourglass, 1000);
+    </script>
+</body>
+</html>

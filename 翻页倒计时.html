@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>动态倒计时</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        
+        .countdown-container {
+            display: flex;
+            gap: 15px;
+            perspective: 1000px;
+        }
+        
+        .countdown-box {
+            background-color: #000;
+            color: #fff;
+            width: 100px;
+            height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .countdown-value {
+            font-size: 48px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            transition: transform 0.3s ease;
+        }
+        
+        .countdown-label {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 8px;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        /* 数字变化动画 */
+        @keyframes flip {
+            0% { transform: rotateX(0deg); }
+            50% { transform: rotateX(90deg); }
+            100% { transform: rotateX(0deg); }
+        }
+        
+        .flip {
+            animation: flip 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 600px) {
+            .countdown-box {
+                width: 80px;
+                height: 100px;
+            }
+            .countdown-value {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="countdown-container">
+        <div class="countdown-box">
+            <div class="countdown-value" id="hours">15</div>
+            <div class="countdown-label">Hours</div>
+        </div>
+        <div class="countdown-box">
+            <div class="countdown-value" id="minutes">36</div>
+            <div class="countdown-label">Minutes</div>
+        </div>
+        <div class="countdown-box">
+            <div class="countdown-value" id="seconds">37</div>
+            <div class="countdown-label">Seconds</div>
+        </div>
+    </div>
+
+    <script>
+        // 设置目标日期 (可以修改为您需要的日期)
+        const targetDate = new Date();
+        targetDate.setHours(targetDate.getHours() + 15);
+        targetDate.setMinutes(targetDate.getMinutes() + 36);
+        targetDate.setSeconds(targetDate.getSeconds() + 37);
+        
+        function updateCountdown() {
+            const now = new Date();
+            const diff = targetDate - now;
+            
+            if (diff <= 0) {
+                // 倒计时结束
+                document.getElementById('hours').textContent = '00';
+                document.getElementById('minutes').textContent = '00';
+                document.getElementById('seconds').textContent = '00';
+                return;
+            }
+            
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            // 添加动画效果
+            animateValue('hours', hours.toString().padStart(2, '0'));
+            animateValue('minutes', minutes.toString().padStart(2, '0'));
+            animateValue('seconds', seconds.toString().padStart(2, '0'));
+        }
+        
+        function animateValue(id, newValue) {
+            const element = document.getElementById(id);
+            if (element.textContent !== newValue) {
+                element.classList.add('flip');
+                setTimeout(() => {
+                    element.textContent = newValue;
+                    element.classList.remove('flip');
+                }, 300);
+            }
+        }
+        
+        // 立即更新并设置定时器
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+    </script>
+</body>
+</html>

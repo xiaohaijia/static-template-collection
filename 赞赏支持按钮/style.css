@@ -1,0 +1,111 @@
+body {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  background: rgba(241, 240, 240, 0.282);
+}
+
+.trigger-btn {
+  position: fixed;
+  align-items: center;
+  justify-content: center;
+  padding: 1em 1em 1em 3em;
+  border: none;
+  border-radius: 12px;
+  box-shadow: rgba(9, 45, 99, 0.1) 0px 10px 10px -10px;
+  cursor: pointer;
+  font-size: 14px;
+  background: #fff;
+  color: #444444;
+  display: flex;
+  overflow: hidden;
+}
+
+button svg {
+  position: absolute;
+  left: 0.4em;
+  width: 30px;
+  height: 30px;
+  transform: rotateY(-180deg);
+  transition: transform 0.4s cubic-bezier(0.68, -0.6, 0.32, 1.6);
+}
+
+button:hover svg {
+  transform: rotateY(-180deg) translateX(-0.25em);
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+.reward-box {
+  position: fixed;
+  top: calc(50% - 300px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 15px;
+  text-align: center;
+  width: 150px;
+  height: 220px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  display: none;
+}
+
+.img-container {
+  width: 100%;
+  height: 180px;
+  margin-bottom: 10px;
+}
+
+.reward-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+  border-radius: 10px;
+}
+
+.reward-img.active {
+  display: block;
+}
+
+.switch-group {
+  display: flex;
+  justify-content: space-around;
+}
+
+.switch-btn {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+input[type="radio"] {
+  width: 14px;
+  height: 14px;
+  border: 1px solid;
+  border-radius: 50%;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+
+input[value="alipay"] {
+  border-color: #2196F3;
+}
+
+input[value="alipay"]:checked {
+  background: #2196F3;
+}
+
+input[value="wechat"] {
+  border-color: #4CAF50;
+}
+
+input[value="wechat"]:checked {
+  background: #4CAF50;
+}

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时间进度</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            padding: 20px;
+            margin: 0;
+            line-height: 1.5;
+        }
+        
+        .time-progress-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .time-item {
+            margin-bottom: 20px;
+        }
+        
+        .time-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .time-title {
+            font-weight: 500;
+            font-size: 16px;
+            color: #2d3436;
+        }
+        
+        .time-percent {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .progress-bar-container {
+            height: 8px;
+            background-color: #edf2f7;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            position: relative;
+        }
+        
+        .progress-fill::after {
+            content: attr(data-percent);
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        .progress-text {
+            font-size: 14px;
+            color: #636e72;
+            margin-top: 4px;
+        }
+        
+        /* 不同时间维度的颜色 */
+        .life-progress { background-color: #4ECDC4; width: 66%; }
+        .day-progress { background-color: #FFD166; width: 45%; }
+        .week-progress { background-color: #00b894; width: 78%; }
+        .month-progress { background-color: #FF9800; width: 28%; }
+        .year-progress { background-color: #0984e3; width: 53%; }
+        
+        /* 高亮数字 */
+        .highlight {
+            color: #4ECDC4;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="time-progress-container">
+        <div class="time-item">
+            <div class="time-header">
+                <div class="time-title">你的人生还剩下超过50年</div>
+                <div class="time-percent" style="color: #4ECDC4;">66%</div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-fill life-progress" data-percent="66%"></div>
+            </div>
+            <div class="progress-text">
+                你也许还能再吃<span class="highlight">54,963</span>顿饭，
+                度过<span class="highlight">2,617</span>个愉快的周末，
+                以及享受<span class="highlight">3,960</span>个美妙的夜晚。
+            </div>
+        </div>
+        
+        <div class="time-item">
+            <div class="time-header">
+                <div class="time-title">今天还余下大约11小时</div>
+                <div class="time-percent" style="color: #FFD166;">45%</div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-fill day-progress" data-percent="45%"></div>
+            </div>
+        </div>
+        
+        <div class="time-item">
+            <div class="time-header">
+                <div class="time-title">本周还余下5天</div>
+                <div class="time-percent" style="color: #00b894;">78%</div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-fill week-progress" data-percent="78%"></div>
+            </div>
+        </div>
+        
+        <div class="time-item">
+            <div class="time-header">
+                <div class="time-title">这个月还余下8天</div>
+                <div class="time-percent" style="color: #FF9800;">28%</div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-fill month-progress" data-percent="28%"></div>
+            </div>
+        </div>
+        
+        <div class="time-item">
+            <div class="time-header">
+                <div class="time-title">2021年还余下6个月</div>
+                <div class="time-percent" style="color: #0984e3;">53%</div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-fill year-progress" data-percent="53%"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
