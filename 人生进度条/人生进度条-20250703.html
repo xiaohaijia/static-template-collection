@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生命进度</title>
+    <style>
+        :root {
+            --primary-color: #4ECDC4;
+            --day-color: #FFD166;
+            --week-color: #06D6A0;
+            --month-color: #FF9800;
+            --year-color: #4361EE;
+            --background-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-primary: #2d3436;
+            --text-secondary: #636e72;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background-color: #121212;
+                --card-bg: #1e1e1e;
+                --text-primary: #e2e2e2;
+                --text-secondary: #a0a0a0;
+                --shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            }
+        }
+        
+        body.dark-mode {
+            --background-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-primary: #e2e2e2;
+            --text-secondary: #a0a0a0;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            padding: 20px;
+            margin: 0;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .time-progress-container {
+            width: 100%;
+            max-width: 550px;
+            margin: 0 auto;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .time-item {
+            margin-bottom: 5px;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeIn 0.5s ease forwards;
+            position: relative;
+            padding: 15px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .time-item:hover {
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+        
+        body.dark-mode .time-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .time-item:nth-child(1) { animation-delay: 0.1s; }
+        .time-item:nth-child(2) { animation-delay: 0.2s; }
+        .time-item:nth-child(3) { animation-delay: 0.3s; }
+        .time-item:nth-child(4) { animation-delay: 0.4s; }
+        .time-item:nth-child(5) { animation-delay: 0.5s; }
+        
+        .time-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .time-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--text-primary);
+        }
+        
+        .time-percent {
+            font-weight: 700;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .progress-bar-container {
+            height: 12px;
+            background-color: rgba(237, 242, 247, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 8px;
+            position: relative;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 1.5s cubic-bezier(0.19, 1, 0.22, 1);
+            width: 0;
+            position: relative;
+            background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.1) 75%, transparent 75%, transparent);
+            background-size: 30px 30px;
+            animation: progress-animation 2s linear infinite;
+        }
+        
+        @keyframes progress-animation {
+            0% {
+                background-position: 0 0;
+            }
+            100% {
+                background-position: 30px 0;
+            }
+        }
+        
+        .progress-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            line-height: 1.6;
+        }
+        
+        /* 不同时间维度的颜色 */
+        .life-progress { background-color: var(--primary-color); }
+        .day-progress { background-color: var(--day-color); }
+        .week-progress { background-color: var(--week-color); }
+        .month-progress { background-color: var(--month-color); }
+        .year-progress { background-color: var(--year-color); }
+        
+        /* 高亮数字 */
+        .highlight {
+            position: relative;
+            font-weight: 600;
+            padding: 0 2px;
+            display: inline-block;
+            transition: all 0.2s ease;
+        }
+
+        .highlight:hover {
+            transform: translateY(-2px);
+        }
+
+        .life .highlight { color: var(--primary-color); }
+        .day .highlight { color: var(--day-color); }
+        .week .highlight { color: var(--week-color); }
+        .month .highlight { color: var(--month-color); }
+        .year .highlight { color: var(--year-color); }
+        
+        .time-icon {
+            margin-right: 8px;
+            font-size: 20px;
+        }
+        .time-label {
+            position: absolute;
+            font-size: 10px;
+            color: var(--text-secondary);
+            top: -20px;
+        }
+        
+        .time-label.start {
+            left: 0;
+        }
+        
+        .time-label.end {
+            right: 0;
+        }
+        
+        .progress-marker {
+            position: absolute;
+            width: 2px;
+            height: 8px;
+            background-color: rgba(255, 255, 255, 0.5);
+            top: 2px;
+            z-index: 2;
+        }
+        
+        @media (max-width: 600px) {
+            .time-progress-container {
+                padding: 20px;
+                border-radius: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="time-progress-container">
+        <div class="time-item life">
+            <div class="time-header">
+                <div class="time-title"><span class="time-icon">🌟</span>人生进度</div>
+                <div class="time-percent" style="color: var(--primary-color);">34%</div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-fill life-progress" data-percent="34"></div>
+                <div class="time-label start">出生</div>
+                <div class="time-label end">预期寿命</div>
+            </div>
+            <div class="progress-text">
+                你已经度过了<span class="highlight">12,410</span>天，
+                经历了<span class="highlight">1,770</span>个周末，
+                享受了<span class="highlight">34</span>年的时光。
+            </div>
+        </div>
+        
+        <div class="time-item day">
+            <div class="time-header">
+                <div class="time-title"><span class="time-icon">🌞</span>今日进度</div>
+                <div class="time-percent" style="color: var(--day-color);">0%</div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-fill day-progress" data-percent="0"></div>
+                <div class="progress-marker" style="left: 25%"></div>
+                <div class="progress-marker" style="left: 50%"></div>
+                <div class="progress-marker" style="left: 75%"></div>
+            </div>
+            <div class="progress-text">
+                今天已过去<span class="highlight">0</span>小时，剩余<span class="highlight">24</span>小时
+            </div>
+        </div>
+        
+        <div class="time-item week">
+            <div class="time-header">
+                <div class="time-title"><span class="time-icon">📅</span>本周进度</div>
+                <div class="time-percent" style="color: var(--week-color);">0%</div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-fill week-progress" data-percent="0"></div>
+                <div class="progress-marker" style="left: 14.28%"></div>
+                <div class="progress-marker" style="left: 28.57%"></div>
+                <div class="progress-marker" style="left: 42.85%"></div>
+                <div class="progress-marker" style="left: 57.14%"></div>
+                <div class="progress-marker" style="left: 71.42%"></div>
+                <div class="progress-marker" style="left: 85.71%"></div>
+            </div>
+            <div class="progress-text">
+                本周已过去<span class="highlight">0</span>天，剩余<span class="highlight">7</span>天
+            </div>
+        </div>
+        
+        <div class="time-item month">
+            <div class="time-header">
+                <div class="time-title"><span class="time-icon">🗓️</span>本月进度</div>
+                <div class="time-percent" style="color: var(--month-color);">0%</div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-fill month-progress" data-percent="0"></div>
+                <div class="progress-marker" style="left: 25%"></div>
+                <div class="progress-marker" style="left: 50%"></div>
+                <div class="progress-marker" style="left: 75%"></div>
+            </div>
+            <div class="progress-text">
+                本月已过去<span class="highlight">0</span>天，剩余<span class="highlight">30</span>天
+            </div>
+        </div>
+        
+        <div class="time-item year">
+            <div class="time-header">
+                <div class="time-title"><span class="time-icon">🎊</span>年度进度</div>
+                <div class="time-percent" style="color: var(--year-color);">0%</div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-fill year-progress" data-percent="0"></div>
+                <div class="progress-marker" style="left: 25%"></div>
+                <div class="progress-marker" style="left: 50%"></div>
+                <div class="progress-marker" style="left: 75%"></div>
+            </div>
+            <div class="progress-text">
+                今年已过去<span class="highlight">0</span>个月，剩余<span class="highlight">12</span>个月
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化进度条动画
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const progressBars = document.querySelectorAll('.progress-fill');
+                progressBars.forEach(bar => {
+                    const percent = bar.getAttribute('data-percent');
+                    bar.style.width = percent + '%';
+                });
+            }, 300);
+        });
+        
+        // 格式化数字，添加千位分隔符
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+        
+        // 实时更新时间
+        function updateTimeProgress() {
+            const now = new Date();
+            
+            // 更新当前时间显示
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            
+            // 更新人生进度 (假设平均寿命80岁)
+            const birthYear = 2001; // 这里假设出生年份是1990年，你可以根据实际情况修改
+            const lifeExpectancy = 80;
+            const age = now.getFullYear() - birthYear;
+            const lifePercent = (age / lifeExpectancy * 100).toFixed(0);
+            const daysSinceBirth = Math.floor((now - new Date(birthYear, 0, 1)) / (1000 * 60 * 60 * 24));
+            const weekendsSinceBirth = Math.floor(daysSinceBirth / 7);
+            
+            document.querySelector('.life-progress').setAttribute('data-percent', lifePercent);
+            document.querySelector('.life-progress').style.width = lifePercent + '%';
+            document.querySelector('.life .time-percent').textContent = lifePercent + '%';
+            document.querySelector('.life .progress-text').innerHTML = 
+                `你已经度过了<span class="highlight">${formatNumber(daysSinceBirth)}</span>天，
+                经历了<span class="highlight">${formatNumber(weekendsSinceBirth)}</span>个周末，
+                享受了<span class="highlight">${age}</span>年的时光。`;
+            
+            // 更新日进度
+            const dayStart = new Date(now);
+            dayStart.setHours(0, 0, 0, 0);
+            const dayEnd = new Date(dayStart);
+            dayEnd.setDate(dayEnd.getDate() + 1);
+            const dayPercent = ((now - dayStart) / (dayEnd - dayStart) * 100).toFixed(0);
+            const hoursPassedToday = Math.floor((now - dayStart) / 3600000);
+            const minutesPassedThisHour = Math.floor(((now - dayStart) % 3600000) / 60000);
+            const hoursLeftToday = 23 - hoursPassedToday;
+            const minutesLeftThisHour = 60 - minutesPassedThisHour;
+            
+            document.querySelector('.day-progress').setAttribute('data-percent', dayPercent);
+            document.querySelector('.day-progress').style.width = dayPercent + '%';
+            document.querySelector('.day .time-percent').textContent = dayPercent + '%';
+            document.querySelector('.day .time-title').innerHTML = `<span class="time-icon">🌞</span>今日进度`;
+            document.querySelector('.day .progress-text').innerHTML = 
+                `今天已过去<span class="highlight">${hoursPassedToday}</span>小时<span class="highlight">${minutesPassedThisHour}</span>分钟，
+                剩余<span class="highlight">${hoursLeftToday}</span>小时<span class="highlight">${minutesLeftThisHour}</span>分钟`;
+            
+            // 更新周进度
+            const weekDay = now.getDay() || 7; // 把周日算作7
+            const weekPercent = (weekDay / 7 * 100).toFixed(0);
+            const weekNames = ["周日", "周一", "周二", "周三", "周四", "周五", "周六", "周日"];
+            const todayName = weekNames[now.getDay()];
+            
+            document.querySelector('.week-progress').setAttribute('data-percent', weekPercent);
+            document.querySelector('.week-progress').style.width = weekPercent + '%';
+            document.querySelector('.week .time-percent').textContent = weekPercent + '%';
+            document.querySelector('.week .time-title').innerHTML = `<span class="time-icon">📅</span>本周进度 (${todayName})`;
+            document.querySelector('.week .progress-text').innerHTML = 
+                `本周已过去<span class="highlight">${weekDay}</span>天，剩余<span class="highlight">${7 - weekDay}</span>天`;
+            
+            // 更新月进度
+            const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            const dayOfMonth = now.getDate();
+            const monthPercent = (dayOfMonth / daysInMonth * 100).toFixed(0);
+            const monthNames = ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"];
+            const currentMonth = monthNames[now.getMonth()];
+            
+            document.querySelector('.month-progress').setAttribute('data-percent', monthPercent);
+            document.querySelector('.month-progress').style.width = monthPercent + '%';
+            document.querySelector('.month .time-percent').textContent = monthPercent + '%';
+            document.querySelector('.month .time-title').innerHTML = `<span class="time-icon">🗓️</span>${currentMonth}进度`;
+            document.querySelector('.month .progress-text').innerHTML = 
+                `本月已过去<span class="highlight">${dayOfMonth}</span>天，剩余<span class="highlight">${daysInMonth - dayOfMonth}</span>天`;
+            
+            // 更新年进度
+            const startOfYear = new Date(now.getFullYear(), 0, 1);
+            const endOfYear = new Date(now.getFullYear() + 1, 0, 1);
+            const yearPercent = ((now - startOfYear) / (endOfYear - startOfYear) * 100).toFixed(0);
+            const monthsPassed = now.getMonth();
+            const daysPassed = Math.floor((now - startOfYear) / (1000 * 60 * 60 * 24));
+            const daysInYear = Math.floor((endOfYear - startOfYear) / (1000 * 60 * 60 * 24));
+            const daysLeft = daysInYear - daysPassed;
+            
+            document.querySelector('.year-progress').setAttribute('data-percent', yearPercent);
+            document.querySelector('.year-progress').style.width = yearPercent + '%';
+            document.querySelector('.year .time-percent').textContent = yearPercent + '%';
+            document.querySelector('.year .time-title').innerHTML = `<span class="time-icon">🎊</span>${now.getFullYear()}年进度`;
+            document.querySelector('.year .progress-text').innerHTML = 
+                `今年已过去<span class="highlight">${daysPassed}</span>天，
+                约<span class="highlight">${monthsPassed}</span>个月，
+                剩余<span class="highlight">${daysLeft}</span>天`;
+        }
+        
+        // 页面加载完毕后立即更新一次
+        document.addEventListener('DOMContentLoaded', () => {
+            updateTimeProgress();
+            // 每秒更新一次
+            setInterval(updateTimeProgress, 1000);
+        });
+    </script>
+</body>
+</html>

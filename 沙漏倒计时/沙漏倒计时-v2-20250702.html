@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>24小时沙漏倒计时</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: white;
+            margin: 0;
+            flex-direction: column;
+        }
+        
+        .hourglass-container {
+            position: relative;
+            width: 150px;
+            height: 250px;
+            margin-bottom: 20px;
+        }
+        
+        .hourglass {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .glass {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #8B4513 0%, #8B4513 10%, #f8f8f8 10%, #f8f8f8 90%, #8B4513 90%, #8B4513 100%);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .top-sand, .bottom-sand {
+            position: absolute;
+            width: 80%;
+            left: 10%;
+            transition: height 1s linear;
+        }
+        
+        .top-sand {
+            top: 15%;
+            height: 35%;
+            background-color: #FFA500;
+            border-radius: 0 0 50% 50%;
+        }
+        
+        .bottom-sand {
+            bottom: 15%;
+            height: 0%;
+            background-color: #FFA500;
+            border-radius: 50% 50% 0 0;
+        }
+        
+        .neck {
+            position: absolute;
+            width: 30%;
+            height: 12%;
+            background-color: #f8f8f8;
+            left: 35%;
+            top: 44%;
+            clip-path: polygon(0% 0%, 100% 0%, 80% 100%, 20% 100%);
+            z-index: 2;
+        }
+        
+        .sand-stream {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: #FFA500;
+            border-radius: 50%;
+            z-index: 3;
+            animation: fall 1s linear forwards;
+        }
+        
+        .timer-display {
+            font-size: 1.5rem;
+            color: #333;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        
+        @keyframes fall {
+            to { transform: translateY(100px); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="hourglass-container">
+        <div class="hourglass">
+            <div class="glass"></div>
+            <div class="top-sand" id="topSand"></div>
+            <div class="neck"></div>
+            <div class="bottom-sand" id="bottomSand"></div>
+        </div>
+    </div>
+    
+    <div class="timer-display" id="timer"></div>
+
+    <script>
+        (function() {
+            // 缓存DOM元素
+            const topSand = document.getElementById('topSand');
+            const bottomSand = document.getElementById('bottomSand');
+            const timerDisplay = document.getElementById('timer');
+            const hourglass = document.querySelector('.hourglass');
+            
+            let lastTime = 0;
+            let sandGrains = [];
+            let animationId;
+            
+            // 简化随机数生成
+            function random(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+            
+            // 创建沙粒（优化版）
+            function createSandGrain() {
+                const sand = document.createElement('div');
+                sand.className = 'sand-stream';
+                
+                const topHeight = parseFloat(topSand.style.height || '35%');
+                const startTop = 15 + topHeight - 2;
+                
+                sand.style.left = `calc(45% + ${random(-10, 10)}%)`;
+                sand.style.top = `${startTop}%`;
+                sand.style.width = `${random(6, 10)}px`;
+                sand.style.height = sand.style.width;
+                
+                hourglass.appendChild(sand);
+                sandGrains.push({
+                    element: sand,
+                    createdAt: Date.now()
+                });
+                
+                // 自动移除
+                setTimeout(() => sand.remove(), 1000);
+            }
+            
+            // 沙粒生成控制器
+            function sandController(timestamp) {
+                if (!lastTime || timestamp - lastTime > random(300, 500)) {
+                    createSandGrain();
+                    lastTime = timestamp;
+                }
+                animationId = requestAnimationFrame(sandController);
+            }
+            
+            // 更新沙漏状态
+            function updateHourglass() {
+                const now = new Date();
+                const secondsPassed = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+                const percentRemaining = 1 - (secondsPassed / 86400);
+                
+                // 更新时间显示
+                const remaining = new Date((86400 - secondsPassed) * 1000);
+                timerDisplay.textContent = remaining.toISOString().substr(11, 8);
+                
+                // 更新沙子位置
+                const topHeight = 35 * percentRemaining;
+                const bottomHeight = 35 * (1 - percentRemaining);
+                
+                topSand.style.height = `${topHeight}%`;
+                bottomSand.style.height = `${bottomHeight}%`;
+                
+                // 调整沙堆形状
+                topSand.style.borderRadius = topHeight < 5 ? '0 0 20px 20px' : '0 0 50% 50%';
+                bottomSand.style.borderRadius = bottomHeight < 5 ? '20px 20px 0 0' : '50% 50% 0 0';
+                
+                // 清理过期沙粒引用
+                sandGrains = sandGrains.filter(g => g.element.isConnected);
+            }
+            
+            // 初始化
+            updateHourglass();
+            animationId = requestAnimationFrame(sandController);
+            setInterval(updateHourglass, 1000);
+            
+            // 清理函数
+            window.addEventListener('beforeunload', () => {
+                cancelAnimationFrame(animationId);
+                sandGrains.forEach(g => g.element.remove());
+            });
+        })();
+    </script>
+</body>
+</html>
