@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时间流逝可视化</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(60, 1fr);
+            gap: 0.3vmin; /* 减小间距 */
+            width: 90vmin;
+            height: 60vmin; /* 调整高度使圆点更紧凑 */
+        }
+
+        .dot {
+            width: 1vmin;
+            height: 1vmin;
+            border-radius: 50%;
+            background-color: black;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .dot.past {
+            background-color: #e0e0e0;
+            transform: scale(0.8);
+            opacity: 0.7;
+        }
+
+        .dot.current {
+            background-color: #FF5722;
+            transform: scale(1.5);
+            animation: pulse 1.5s infinite;
+        }
+
+        .dot:hover {
+            transform: scale(1.2);
+            background-color: #4CAF50;
+        }
+
+        .dot::after {
+            content: attr(data-time);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 0.3vmin 0.6vmin;
+            border-radius: 0.3vmin;
+            font-size: 1.5vmin;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .dot:hover::after {
+            opacity: 1;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 87, 34, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 1vmin rgba(255, 87, 34, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 87, 34, 0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="timeContainer"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('timeContainer');
+            const totalMinutes = 1440; // 24小时 * 60分钟
+            
+            // 创建1440个时间点
+            for (let i = 0; i < totalMinutes; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                
+                // 计算当前点对应的时间
+                const hours = Math.floor(i / 60);
+                const minutes = i % 60;
+                const timeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                
+                // 设置时间提示
+                dot.setAttribute('data-time', timeStr);
+                
+                container.appendChild(dot);
+            }
+            
+            // 更新时间点状态
+            function updateTimeDots() {
+                const now = new Date();
+                const currentMinute = now.getHours() * 60 + now.getMinutes();
+                const dots = document.querySelectorAll('.dot');
+                
+                dots.forEach((dot, index) => {
+                    if (index < currentMinute) {
+                        dot.classList.add('past');
+                        dot.classList.remove('current');
+                    } else if (index === currentMinute) {
+                        dot.classList.add('current');
+                        dot.classList.remove('past');
+                    } else {
+                        dot.classList.remove('past', 'current');
+                    }
+                });
+            }
+            
+            // 初始更新
+            updateTimeDots();
+            
+            // 每秒更新一次
+            setInterval(updateTimeDots, 1000);
+        });
+    </script>
+</body>
+</html>

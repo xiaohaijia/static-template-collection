@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obsidian 锁屏插件</title>
+    <style>
+        :root {
+            --text-primary: rgba(255, 255, 255, 0.95);
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --bg-primary: #000000;
+            --bg-secondary: rgba(255, 255, 255, 0.1);
+            --border-color: rgba(255, 255, 255, 0.2);
+            --accent-color: #0070f3;
+            --font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', 'Helvetica Neue', sans-serif;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font-family);
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            background-image: url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+        }
+        
+        .lock-screen-container {
+            text-align: center;
+            width: 100%;
+            max-width: 340px;
+            padding: 0 20px;
+            animation: fadeIn 0.5s ease-out;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .app-info {
+            margin-bottom: 50px;
+        }
+        
+        .app-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            opacity: 0.95;
+        }
+        
+        .app-name {
+            font-size: 24px;
+            font-weight: 500;
+            color: var(--text-primary);
+            letter-spacing: 0.5px;
+        }
+        .password-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .password-input {
+            width: 100%;
+            padding: 16px 18px;
+            font-size: 16px;
+            border: none;
+            border-radius: 12px;
+            background-color: rgba(255, 255, 255, 0.15);
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .password-input:focus {
+            background-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .password-input::placeholder {
+            color: var(--text-secondary);
+        }
+        
+        .status-bar {
+            position: absolute;
+            top: 40px;
+            left: 0;
+            width: 100%;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 2;
+        }
+        
+        .time {
+            font-size: 80px;
+            font-weight: 200;
+            letter-spacing: -1px;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .date {
+            font-size: 18px;
+            color: var(--text-secondary);
+            font-weight: 400;
+            text-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .bottom-info {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+            z-index: 2;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .shake {
+            animation: shake 0.4s;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="status-bar">
+        <div class="time">--:--</div>
+    </div>
+    
+    <div class="lock-screen-container">
+        <div class="app-info">
+            <div class="app-icon">📒</div>
+            <div class="app-name">Obsidian Lock</div>
+        </div>
+        
+        <div class="password-container">
+            <input type="password" class="password-input" placeholder="输入密码解锁" id="passwordInput" autofocus>
+        </div>
+        
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordInput = document.getElementById('passwordInput');
+            const lockScreen = document.querySelector('.lock-screen-container');
+            
+            // 更新时间和日期
+            function updateTime() {
+                const now = new Date();
+                const hours = now.getHours().toString().padStart(2, '0');
+                const minutes = now.getMinutes().toString().padStart(2, '0');
+                document.querySelector('.time').textContent = `${hours}:${minutes}`;
+            }
+            
+            setInterval(updateTime, 1000);
+            updateTime();
+            
+            // 密码输入处理
+            passwordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    // 这里应该是验证密码的逻辑
+                    if (passwordInput.value !== 'obsidian') {
+                        lockScreen.classList.add('shake');
+                        setTimeout(() => {
+                            lockScreen.classList.remove('shake');
+                        }, 500);
+                        passwordInput.value = '';
+                    } else {
+                        // 密码正确，解锁
+                        document.body.style.backgroundColor = '#f5f5f5';
+                        document.body.innerHTML = `
+                            <div style="padding: 40px 20px; color: #333; text-align: center;">
+                                <h2 style="margin-bottom: 20px;">解锁成功</h2>
+                                <p>在实际插件中会关闭锁屏界面</p>
+                            </div>
+                        `;
+                    }
+                }
+            });
+            
+            // 自动聚焦密码输入框
+            passwordInput.focus();
+            
+            // 确保点击页面任何地方都会聚焦到密码输入框
+            document.body.addEventListener('click', function() {
+                passwordInput.focus();
+            });
+        });
+    </script>
+</body>
+</html>
