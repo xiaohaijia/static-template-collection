@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>月度时间流逝</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    height:100vh;
+    background:#0d0d0d;
+    font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;
+    color:#fff;
+}
+#clock{
+    position:relative;
+    width:500px;
+    height:500px;
+    border-radius:50%;
+    border:1px solid #222;
+}
+#info{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    text-align:center;
+    z-index:10;
+}
+#date{font-size:44px;font-weight:700;letter-spacing:2px}
+#left{margin-top:8px;font-size:14px;color:#888}
+
+/* 圆点 */
+.dot{
+    position:absolute;
+    top:50%;left:50%;
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    transform:translate(-50%,-50%);
+    transition:all .4s ease;
+    cursor:pointer;
+}
+.dot.past{background:#ff4757;transform:translate(-50%,-50%) scale(.35);opacity:.4}
+.dot.future{background:#1dd1a1;box-shadow:0 0 8px #1dd1a1}
+.dot.current{background:#00ffff;animation:pulse 2s infinite;z-index:5}
+
+/* 水波纹 */
+@keyframes pulse{
+    0%{box-shadow:0 0 0 0 #00ffffaa}
+    70%{box-shadow:0 0 0 18px #00ffff00}
+    100%{box-shadow:0 0 0 0 #00ffff00}
+}
+
+/* 悬浮提示 */
+.tooltip{
+    position:absolute;
+    top:-32px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#000a;
+    padding:4px 8px;
+    border-radius:4px;
+    font-size:12px;
+    white-space:nowrap;
+    pointer-events:none;
+    opacity:0;
+    transition:opacity .2s;
+}
+.dot:hover .tooltip{opacity:1}
+</style>
+</head>
+<body>
+
+<div id="clock">
+    <div id="info">
+        <div id="date">--月--日</div>
+        <div id="left">本月剩余 -- 天</div>
+    </div>
+</div>
+
+<script>
+(() => {
+    const clock = document.getElementById('clock');
+    const dateEl = document.getElementById('date');
+    const leftEl = document.getElementById('left');
+    const radius = 225;
+    const dots = [];
+
+    // 获取当月天数
+    function getDaysInMonth() {
+        const now = new Date();
+        return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    }
+
+    const daysInMonth = getDaysInMonth();
+
+    for (let d = 1; d <= daysInMonth; d++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        dot.dataset.day = d;
+
+        const angle = ((d - 1) / daysInMonth) * 2 * Math.PI - Math.PI / 2;
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+        dot.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+
+        // 悬浮提示
+        const tip = document.createElement('span');
+        tip.className = 'tooltip';
+        tip.textContent = `${d}日`;
+        dot.appendChild(tip);
+
+        clock.appendChild(dot);
+        dots.push(dot);
+    }
+
+    function update() {
+        const now = new Date();
+        const currentDay = now.getDate();
+        const currentMonth = now.getMonth() + 1;
+
+        dateEl.textContent = `${currentMonth}月${currentDay}日`;
+
+        dots.forEach((dot,i)=>{
+            const day = parseInt(dot.dataset.day);
+            dot.classList.remove('current','past','future');
+            if(day < currentDay) dot.classList.add('past');
+            else if(day === currentDay) dot.classList.add('current');
+            else dot.classList.add('future');
+        });
+
+        const leftDays = daysInMonth - currentDay;
+        leftEl.textContent = `本月剩余 ${leftDays} 天`;
+    }
+
+    update();
+    setInterval(update,1000);
+})();
+</script>
+</body>
+</html>
