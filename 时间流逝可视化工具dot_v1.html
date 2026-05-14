@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>时间流逝 · 极简</title>
+<style>
+:root{
+  --dot:1.2vmin;
+  --gap:0.2vmin;
+  --past:#e5e5e5;
+  --current:#ff5722;
+}
+*{box-sizing:border-box}
+body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;background:#fdfdfd}
+#panel{
+  display:grid;
+  grid-template-columns:repeat(60,1fr);
+  gap:var(--gap);
+  width:90vmin;
+  height:calc(24*(var(--dot) + var(--gap)));
+}
+.dot{
+  width:var(--dot);
+  height:var(--dot);
+  border-radius:50%;
+  background:var(--past);
+  transition:transform .3s,background .3s;
+  position:relative;
+  cursor:pointer;
+}
+.dot.current{
+  background:var(--current);
+  transform:scale(1.6);
+  animation:pulse 1.5s infinite;
+}
+.dot.future{opacity:.3}
+@keyframes pulse{
+  0%  {box-shadow:0 0 0 0 rgba(255,87,34,.6)}
+  70% {box-shadow:0 0 0 .8vmin rgba(255,87,34,0)}
+  100%{box-shadow:0 0 0 0 rgba(255,87,34,0)}
+}
+/* 提示框 */
+.tooltip{
+  position:absolute;
+  bottom:150%;
+  left:50%;
+  transform:translateX(-50%) scale(.8);
+  background:rgba(0,0,0,.8);
+  color:#fff;
+  padding:.3em .6em;
+  border-radius:.3em;
+  font-size:1.2vmin;
+  white-space:nowrap;
+  opacity:0;
+  pointer-events:none;
+  transition:.2s;
+}
+.dot:hover .tooltip{opacity:1;transform:translateX(-50%) scale(1)}
+</style>
+</head>
+<body>
+<div id="panel"></div>
+
+<script>
+(() => {
+  const panel = document.getElementById('panel');
+  const frag  = document.createDocumentFragment();
+
+  // 一次性创建 1440 个节点
+  for (let m = 0; m < 1440; m++) {
+    const h = String(Math.floor(m/60)).padStart(2,'0');
+    const min = String(m%60).padStart(2,'0');
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    dot.innerHTML = `<span class="tooltip">${h}:${min}</span>`;
+    frag.appendChild(dot);
+  }
+  panel.appendChild(frag);
+
+  // RAF 驱动，降低 CPU
+  function tick() {
+    const now = new Date();
+    const idx = now.getHours()*60 + now.getMinutes();
+    const dots = panel.children;
+    for (let i = 0; i < 1440; i++) {
+      const el = dots[i];
+      if (i < idx) {
+        el.className = 'dot past';
+      } else if (i === idx) {
+        el.className = 'dot current';
+      } else {
+        el.className = 'dot future';
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
+</script>
+</body>
+</html>
