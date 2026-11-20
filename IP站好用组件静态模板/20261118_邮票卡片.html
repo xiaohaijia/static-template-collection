@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>实体档案票据风 · 留言墙设计</title>
+  <style>
+    :root {
+      --bg-canvas: #ecefe9;
+      --paper-bg: #fcfdfa;
+      --paper-stub: #f4f7f2;
+      --tea-dark: #1d322b;
+      --tea-primary: #3b6e5c;
+      --tea-muted: #7b8c85;
+      --tea-tint: rgba(59, 110, 92, 0.08);
+      --border-hairline: rgba(29, 50, 43, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background-color: var(--bg-canvas);
+      /* 极细腻的建筑制图微点阵背景，衬托卡片的实体纸感 */
+      background-image: radial-gradient(rgba(29, 50, 43, 0.12) 1px, transparent 1px);
+      background-size: 20px 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", sans-serif;
+      color: var(--tea-dark);
+      padding: 48px 32px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 多列响应式网格：大屏每排3个，中屏2个，小屏1个 */
+    .wall-grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    /* 创意核心：双段式“回执/明信片”实体卡片 */
+    .ticket-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: var(--paper-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border-hairline);
+      box-shadow: 
+        0 2px 6px rgba(29, 50, 43, 0.03),
+        0 14px 28px -10px rgba(29, 50, 43, 0.08);
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                  box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      overflow: hidden;
+    }
+
+    /* 鼠标悬停时微微抬起，底部隐现茶绿光带 */
+    .ticket-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 
+        0 4px 10px rgba(29, 50, 43, 0.04),
+        0 22px 40px -12px rgba(59, 110, 92, 0.18);
+    }
+
+    .ticket-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--tea-primary), #7da394);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .ticket-card:hover::before {
+      opacity: 1;
+    }
+
+    /* 上半部分：正文主区 */
+    .ticket-main {
+      padding: 26px 26px 24px;
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 顶部栏：极简档案编号 + 日期 */
+    .ticket-meta-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      font-family: "SF Mono", "JetBrains Mono", Menlo, monospace;
+      font-size: 11px;
+      color: var(--tea-muted);
+      letter-spacing: 0.06em;
+    }
+
+    .serial-no {
+      color: var(--tea-primary);
+      font-weight: 600;
+      background: var(--tea-tint);
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    /* 字段：日期 */
+    .ticket-date {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* 字段：留言内容 */
+    .ticket-message {
+      font-size: 15px;
+      line-height: 1.75;
+      color: #263832;
+      font-weight: 400;
+      letter-spacing: 0.01em;
+      /* 保证短留言也有足够的呼吸空间 */
+      min-height: 78px;
+    }
+
+    /* 创意撕裂线（物理票据半圆缺口 + 虚线） */
+    .ticket-perforation {
+      position: relative;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      background: linear-gradient(to bottom, var(--paper-bg) 50%, var(--paper-stub) 50%);
+    }
+
+    .ticket-perforation::before,
+    .ticket-perforation::after {
+      content: "";
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background-color: var(--bg-canvas);
+      border: 1px solid var(--border-hairline);
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 2;
+    }
+
+    /* 左侧半圆缺口 */
+    .ticket-perforation::before {
+      left: -9px;
+    }
+
+    /* 右侧半圆缺口 */
+    .ticket-perforation::after {
+      right: -9px;
+    }
+
+    .perforation-line {
+      width: 100%;
+      margin: 0 14px;
+      border-top: 1px dashed rgba(29, 50, 43, 0.16);
+    }
+
+    /* 下半部分：副券存根（名称 + 邮戳风IP属地） */
+    .ticket-stub {
+      background-color: var(--paper-stub);
+      padding: 14px 26px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    /* 字段：名称 */
+    .author-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .author-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      background-color: var(--tea-primary);
+      transform: rotate(45deg);
+      flex-shrink: 0;
+    }
+
+    .author-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--tea-dark);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* 字段：IP属地（复古几何邮戳印章） */
+    .ip-postmark {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border: 1px solid rgba(59, 110, 92, 0.35);
+      border-radius: 4px;
+      color: var(--tea-primary);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      background: rgba(255, 255, 255, 0.6);
+      transform: rotate(-1.5deg);
+      transition: transform 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    .ticket-card:hover .ip-postmark {
+      transform: rotate(0deg);
+    }
+
+    .ip-postmark svg {
+      width: 11px;
+      height: 11px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+  </style>
+</head>
+<body>
+
+  <main class="wall-grid">
+
+    <!-- 卡片 1 -->
+    <article class="ticket-card">
+      <div class="ticket-main">
+        <div class="ticket-meta-top">
+          <span class="serial-no">NO.042</span>
+          <time class="ticket-date">2026.11.17</time>
+        </div>
+        <p class="ticket-message">
+          在这个信息过载的时代，还能看到如此克制、干净又有审美坚持的角落太难得了。茶绿色的视觉呼吸感极佳，已加入常读列表。
+        </p>
+      </div>
+      <div class="ticket-perforation"><div class="perforation-line"></div></div>
+      <footer class="ticket-stub">
+        <div class="author-wrap">
+          <span class="author-dot"></span>
+          <span class="author-name">陈屿森</span>
+        </div>
+        <div class="ip-postmark" title="IP属地">
+          <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+          <span>日本 · 东京</span>
+        </div>
+      </footer>
+    </article>
+
+    <!-- 卡片 2 -->
+    <article class="ticket-card">
+      <div class="ticket-main">
+        <div class="ticket-meta-top">
+          <span class="serial-no">NO.041</span>
+          <time class="ticket-date">2026.11.15</time>
+        </div>
+        <p class="ticket-message">
+          跟着你分享的工作流思路重构了我的本地效率工具栈，省下了大量重复劳动的时间，真正的“少即是多”。
+        </p>
+      </div>
+      <div class="ticket-perforation"><div class="perforation-line"></div></div>
+      <footer class="ticket-stub">
+        <div class="author-wrap">
+          <span class="author-dot"></span>
+          <span class="author-name">Kira_Design</span>
+        </div>
+        <div class="ip-postmark">
+          <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+          <span>中国 · 上海</span>
+        </div>
+      </footer>
+    </article>
+
+    <!-- 卡片 3 -->
+    <article class="ticket-card">
+      <div class="ticket-main">
+        <div class="ticket-meta-top">
+          <span class="serial-no">NO.040</span>
+          <time class="ticket-date">2026.11.12</time>
+        </div>
+        <p class="ticket-message">
+          好的设计不需要喧哗，就像一张质地考究的明信片，字句落下去的时候自然就有了分量。祝创作长青！
+        </p>
+      </div>
+      <div class="ticket-perforation"><div class="perforation-line"></div></div>
+      <footer class="ticket-stub">
+        <div class="author-wrap">
+          <span class="author-dot"></span>
+          <span class="author-name">夏目与风</span>
+        </div>
+        <div class="ip-postmark">
+          <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+          <span>中国 · 杭州</span>
+        </div>
+      </footer>
+    </article>
+
+    <!-- 卡片 4 -->
+    <article class="ticket-card">
+      <div class="ticket-main">
+        <div class="ticket-meta-top">
+          <span class="serial-no">NO.039</span>
+          <time class="ticket-date">2026.11.09</time>
+        </div>
+        <p class="ticket-message">
+          深夜偶然点进来，把最近几篇长文一口气读完了。视角非常通透，没有贩卖焦虑，只有实打实的思考沉淀。
+        </p>
+      </div>
+      <div class="ticket-perforation"><div class="perforation-line"></div></div>
+      <footer class="ticket-stub">
+        <div class="author-wrap">
+          <span class="author-dot"></span>
+          <span class="author-name">山海皆可平</span>
+        </div>
+        <div class="ip-postmark">
+          <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+          <span>中国 · 深圳</span>
+        </div>
+      </footer>
+    </article>
+
+    <!-- 卡片 5 -->
+    <article class="ticket-card">
+      <div class="ticket-main">
+        <div class="ticket-meta-top">
+          <span class="serial-no">NO.038</span>
+          <time class="ticket-date">2026.11.04</time>
+        </div>
+        <p class="ticket-message">
+          路过留个脚印，期待下一期关于极简桌面与效率系统的深度拆解！
+        </p>
+      </div>
+      <div class="ticket-perforation"><div class="perforation-line"></div></div>
+      <footer class="ticket-stub">
+        <div class="author-wrap">
+          <span class="author-dot"></span>
+          <span class="author-name">阿泽同学</span>
+        </div>
+        <div class="ip-postmark">
+          <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+          <span>英国 · 伦敦</span>
+        </div>
+      </footer>
+    </article>
+
+    <!-- 卡片 6 -->
+    <article class="ticket-card">
+      <div class="ticket-main">
+        <div class="ticket-meta-top">
+          <span class="serial-no">NO.037</span>
+          <time class="ticket-date">2026.10.29</time>
+        </div>
+        <p class="ticket-message">
+          非常喜欢这种像实体票根一样的留言质感，每一条留言都像是从远方寄来的一张小卡片，被认真收藏了起来。
+        </p>
+      </div>
+      <div class="ticket-perforation"><div class="perforation-line"></div></div>
+      <footer class="ticket-stub">
+        <div class="author-wrap">
+          <span class="author-dot"></span>
+          <span class="author-name">苏白</span>
+        </div>
+        <div class="ip-postmark">
+          <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+          <span>中国 · 成都</span>
+        </div>
+      </footer>
+    </article>
+
+  </main>
+
+</body>
+</html>

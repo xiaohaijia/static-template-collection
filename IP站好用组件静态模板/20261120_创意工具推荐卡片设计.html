@@ -1,0 +1,2351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>器物志 · Curated Tools</title>
+
+  <style>
+    /* =====================================================================
+       DESIGN TOKENS — APPLE / DIETER RAMS MINIMALISM & SWISS EDITORIAL
+       ===================================================================== */
+    :root {
+      --canvas: #F5F5F2;
+      --surface: #FFFFFF;
+      --surface-soft: #FAF9F7;
+      --ink: #181816;
+      --ink-secondary: #666660;
+      --ink-muted: #93938B;
+      --hairline: #E5E5DF;
+      --hairline-strong: rgba(24, 24, 22, 0.12);
+      --tea: #2E5242;
+      --tea-hover: #234033;
+      --tea-mist: #EAF0ED;
+      --obsidian: #1C1D1B;
+      --titanium: #E6E8E4;
+      --spring: cubic-bezier(0.22, 1, 0.36, 1);
+      --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+        "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+      --font-mono: "SF Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo,
+        Monaco, Consolas, monospace;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      background-color: var(--canvas);
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background-color: var(--canvas);
+      background-image:
+        radial-gradient(
+          ellipse 110% 55% at 50% -12%,
+          rgba(255, 255, 255, 0.78) 0%,
+          rgba(245, 245, 242, 0) 68%
+        ),
+        radial-gradient(rgba(24, 24, 22, 0.028) 0.5px, transparent 0.5px);
+      background-size: 100% 100%, 16px 16px;
+      color: var(--ink);
+      font-family: var(--font-sans);
+      font-variant-numeric: tabular-nums;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    ::selection {
+      background-color: var(--tea-mist);
+      color: var(--tea);
+    }
+
+    button,
+    input {
+      font-family: inherit;
+    }
+
+    /* =====================================================================
+       PAGE CONTAINER & HEADER TOOLBAR
+       ===================================================================== */
+    .page-shell {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 48px 36px 96px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px 24px;
+      padding-bottom: 24px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--hairline);
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      line-height: 1.2;
+      color: var(--ink);
+    }
+
+    .brand-divider {
+      color: rgba(147, 147, 139, 0.5);
+      font-weight: 300;
+      user-select: none;
+    }
+
+    .brand-subtitle {
+      margin: 0;
+      font-size: 13px;
+      letter-spacing: 0.02em;
+      color: var(--ink-secondary);
+    }
+
+    .toolbar-controls {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    /* =====================================================================
+       SEGMENTED FILTER WITH SLIDING WHITE PILL INDICATOR
+       ===================================================================== */
+    .seg-track {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      padding: 3px;
+      background-color: rgba(24, 24, 22, 0.048);
+      border-radius: 10px;
+      box-shadow: inset 0 0 0 1px rgba(24, 24, 22, 0.045);
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    .seg-pill {
+      position: absolute;
+      top: 3px;
+      left: 0;
+      height: calc(100% - 6px);
+      width: 0;
+      background-color: var(--surface);
+      border-radius: 7.5px;
+      box-shadow:
+        0 1px 2px rgba(24, 24, 22, 0.06),
+        0 2px 6px rgba(24, 24, 22, 0.04),
+        0 0 0 0.5px rgba(24, 24, 22, 0.05);
+      transform: translate3d(0, 0, 0);
+      transition:
+        transform 0.36s var(--spring),
+        width 0.36s var(--spring);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .seg-btn {
+      position: relative;
+      z-index: 1;
+      border: 0;
+      background: transparent;
+      padding: 6px 13px;
+      border-radius: 7.5px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--ink-secondary);
+      cursor: pointer;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s ease;
+    }
+
+    .seg-btn:hover,
+    .seg-btn.is-active {
+      color: var(--ink);
+    }
+
+    .seg-count {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--ink-muted);
+    }
+
+    /* =====================================================================
+       MINIMALIST REAL-TIME SEARCH INPUT
+       ===================================================================== */
+    .search-wrap {
+      position: relative;
+      width: 224px;
+    }
+
+    .search-input {
+      width: 100%;
+      height: 34px;
+      padding: 0 30px 0 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(24, 24, 22, 0.085);
+      background-color: rgba(255, 255, 255, 0.9);
+      color: var(--ink);
+      font-size: 12.5px;
+      outline: none;
+      box-shadow: 0 1px 2px rgba(24, 24, 22, 0.02);
+      transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .search-input::placeholder {
+      color: var(--ink-muted);
+    }
+
+    .search-input:hover {
+      background-color: var(--surface);
+    }
+
+    .search-input:focus {
+      background-color: var(--surface);
+      border-color: rgba(46, 82, 66, 0.45);
+      box-shadow: 0 0 0 3px rgba(46, 82, 66, 0.07);
+    }
+
+    .search-clear {
+      position: absolute;
+      right: 7px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      border: 0;
+      border-radius: 50%;
+      background-color: rgba(24, 24, 22, 0.08);
+      color: var(--ink-secondary);
+      font-size: 12px;
+      line-height: 1;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      transition: background-color 0.18s ease, color 0.18s ease;
+    }
+
+    .search-clear.is-visible {
+      display: inline-flex;
+    }
+
+    .search-clear:hover {
+      background-color: rgba(24, 24, 22, 0.16);
+      color: var(--ink);
+    }
+
+    /* =====================================================================
+       PRECISION HARDWARE TOGGLE SWITCH ("展开内芯")
+       ===================================================================== */
+    .hw-toggle {
+      height: 34px;
+      padding: 0 10px 0 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(24, 24, 22, 0.085);
+      background-color: rgba(255, 255, 255, 0.9);
+      color: var(--ink);
+      font-size: 12.5px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(24, 24, 22, 0.02);
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .hw-toggle:hover {
+      background-color: var(--surface);
+      border-color: rgba(24, 24, 22, 0.15);
+    }
+
+    .hw-track {
+      position: relative;
+      width: 32px;
+      height: 18px;
+      border-radius: 999px;
+      background-color: #DBDCD6;
+      box-shadow:
+        inset 0 1px 2px rgba(24, 24, 22, 0.14),
+        inset 0 0 0 1px rgba(24, 24, 22, 0.06);
+      transition: background-color 0.28s var(--spring);
+      flex-shrink: 0;
+    }
+
+    .hw-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #FFFFFF 0%, #F2F3EF 100%);
+      box-shadow:
+        0 1px 2.5px rgba(24, 24, 22, 0.24),
+        0 0 0 0.5px rgba(24, 24, 22, 0.06);
+      transform: translate3d(0, 0, 0);
+      transition: transform 0.32s var(--spring);
+    }
+
+    .hw-toggle.is-active .hw-track {
+      background-color: var(--tea);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .hw-toggle.is-active .hw-thumb {
+      transform: translate3d(14px, 0, 0);
+    }
+
+    /* =====================================================================
+       STRICT 5-COLUMN GALLERY GRID & RESPONSIVE BREAKPOINTS
+       ===================================================================== */
+    .folio-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 24px 20px;
+    }
+
+    @media (max-width: 1199px) {
+      .folio-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 959px) {
+      .page-shell {
+        padding: 36px 24px 80px;
+      }
+      .folio-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 679px) {
+      .page-shell {
+        padding: 28px 18px 72px;
+      }
+      .folio-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px 14px;
+      }
+      .search-wrap {
+        width: 100%;
+        flex: 1 1 180px;
+      }
+    }
+
+    @media (max-width: 459px) {
+      .folio-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+      }
+    }
+
+    /* =====================================================================
+       TWO-LAYER SLIDE-OUT POCKET SLEEVE CARD
+       ===================================================================== */
+    .folio-wrapper {
+      position: relative;
+      /* Reserves clean vertical space for the 39px upward inner-core slide */
+      padding-top: 44px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .folio-stack {
+      position: relative;
+    }
+
+    /* ----- BACK LAYER: SLIDE-OUT INNER CORE ----- */
+    .inner-card {
+      position: absolute;
+      top: -7px;
+      left: 6px;
+      right: 6px;
+      height: 92px;
+      border-radius: 12px 12px 6px 6px;
+      z-index: 1;
+      overflow: hidden;
+      transform: translate3d(0, 0, 0);
+      transition:
+        transform 0.48s var(--spring),
+        box-shadow 0.44s var(--spring);
+      will-change: transform;
+    }
+
+    /* Material 1: Open Source — Matte Obsidian */
+    .inner-card--oss {
+      background-color: var(--obsidian);
+      color: #EAECEB;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 2px 8px rgba(24, 24, 22, 0.14);
+    }
+
+    /* Material 2: Software — Brushed Mist Titanium Silver */
+    .inner-card--app {
+      background: linear-gradient(135deg, #EAECE8 0%, #E2E5E0 100%);
+      color: var(--ink);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.85),
+        inset 0 0 0 1px rgba(24, 24, 22, 0.075),
+        0 2px 8px rgba(24, 24, 22, 0.05);
+    }
+
+    /* Material 3: AI Skill — Deep Celadon Tea-Green */
+    .inner-card--skill {
+      background-color: var(--tea);
+      color: #F4F6F3;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        0 2px 10px rgba(46, 82, 66, 0.18);
+    }
+
+    /* Minimalist 18px x 2.5px pill grip centered inside the 12.5px semicircular notch */
+    .grip-capsule {
+      position: absolute;
+      top: 11px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 18px;
+      height: 2.5px;
+      border-radius: 999px;
+      pointer-events: none;
+      transition:
+        opacity 0.2s ease,
+        transform 0.34s var(--spring);
+    }
+
+    .inner-card--oss .grip-capsule {
+      background-color: rgba(234, 236, 235, 0.32);
+      box-shadow: inset 0 0.5px 1px rgba(0, 0, 0, 0.55);
+    }
+
+    .inner-card--app .grip-capsule {
+      background-color: rgba(24, 24, 22, 0.22);
+      box-shadow: 0 0.5px 0 rgba(255, 255, 255, 0.75);
+    }
+
+    .inner-card--skill .grip-capsule {
+      background-color: rgba(244, 246, 243, 0.38);
+      box-shadow: inset 0 0.5px 1px rgba(0, 0, 0, 0.22);
+    }
+
+    /* Compact 40px Action Bar: Left = Payload Preview | Right = Direct Action */
+    .inner-action-bar {
+      height: 40px;
+      padding: 0 9px 0 11px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(6px);
+      pointer-events: none;
+      transition:
+        opacity 0.24s ease,
+        transform 0.42s var(--spring);
+    }
+
+    .inner-payload {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 10.5px;
+      line-height: 1.3;
+    }
+
+    .inner-payload--mono {
+      font-family: var(--font-mono);
+    }
+
+    .inner-card--oss .inner-payload {
+      color: #E3E6E3;
+    }
+
+    .inner-card--app .inner-payload {
+      color: #353733;
+    }
+
+    .inner-card--skill .inner-payload {
+      color: #ECF1ED;
+    }
+
+    .inner-action-btn {
+      flex-shrink: 0;
+      border: 0;
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-size: 10.5px;
+      font-weight: 500;
+      line-height: 1.35;
+      text-decoration: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      transition: background-color 0.18s ease, color 0.18s ease, transform 0.15s ease;
+    }
+
+    .inner-action-btn:active {
+      transform: scale(0.96);
+    }
+
+    .inner-card--oss .inner-action-btn {
+      background-color: rgba(255, 255, 255, 0.13);
+      color: #F4F6F3;
+    }
+
+    .inner-card--oss .inner-action-btn:hover {
+      background-color: rgba(255, 255, 255, 0.24);
+    }
+
+    .inner-card--app .inner-action-btn {
+      background-color: var(--ink);
+      color: #F5F5F2;
+    }
+
+    .inner-card--app .inner-action-btn:hover {
+      background-color: var(--tea);
+    }
+
+    .inner-card--skill .inner-action-btn {
+      background-color: #F4F6F3;
+      color: var(--tea);
+    }
+
+    .inner-card--skill .inner-action-btn:hover {
+      background-color: #FFFFFF;
+    }
+
+    /* ----- FRONT LAYER: MATTE PORCELAIN WHITE SLEEVE ----- */
+    .sleeve-shell {
+      position: relative;
+      z-index: 2;
+      filter:
+        drop-shadow(0 1px 2px rgba(24, 24, 22, 0.032))
+        drop-shadow(0 8px 20px rgba(24, 24, 22, 0.048));
+      transition:
+        transform 0.44s var(--spring),
+        filter 0.44s var(--spring);
+      will-change: transform;
+    }
+
+    .sleeve-card {
+      position: relative;
+      height: 214px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #FFFFFF 0%, #FDFDFC 100%);
+      box-shadow:
+        inset 0 0 0 1px rgba(24, 24, 22, 0.075),
+        inset 0 1px 0 rgba(255, 255, 255, 0.98);
+      /* True anti-aliased semicircular thumb notch (radius ~12.5px) at top center */
+      -webkit-mask-image: radial-gradient(circle 12.8px at 50% 0, transparent 12.2px, #000 12.8px);
+      mask-image: radial-gradient(circle 12.8px at 50% 0, transparent 12.2px, #000 12.8px);
+      padding: 15px 17px 14px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: box-shadow 0.3s ease;
+    }
+
+    /* Crisp undistorted SVG top-edge hairline tracing the 12.5px notch curve */
+    .notch-rim {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 29px;
+      height: 15px;
+      pointer-events: none;
+      z-index: 5;
+      display: block;
+    }
+
+    /* Subtle cursor-following specular light sheen */
+    .sleeve-sheen {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0;
+      background: radial-gradient(
+        210px circle at var(--mx, 50%) var(--my, 50%),
+        rgba(46, 82, 66, 0.038) 0%,
+        rgba(255, 255, 255, 0.55) 32%,
+        transparent 72%
+      );
+      transition: opacity 0.3s ease;
+    }
+
+    .folio-wrapper:hover .sleeve-sheen {
+      opacity: 1;
+    }
+
+    /* ----- 4 PURE-TYPOGRAPHY CARD LAYERS (ZERO ICONS, ZERO DOTS) ----- */
+    .card-top-row {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .card-category {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: var(--ink-secondary);
+      white-space: nowrap;
+    }
+
+    .card-pricing {
+      font-size: 11px;
+      color: var(--ink-muted);
+      white-space: nowrap;
+    }
+
+    .card-title-block {
+      position: relative;
+      z-index: 2;
+    }
+
+    .card-name {
+      margin: 0;
+      font-size: 16.5px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.3;
+      color: var(--ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: color 0.2s ease;
+    }
+
+    .folio-wrapper:hover .card-name,
+    .folio-wrapper:focus-visible .card-name {
+      color: var(--tea);
+    }
+
+    .card-tagline {
+      margin: 3px 0 0;
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--ink-secondary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .card-summary {
+      position: relative;
+      z-index: 2;
+      margin: 13px 0 0;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: #4A4C48;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      flex: 1 1 auto;
+    }
+
+    .card-footer {
+      position: relative;
+      z-index: 2;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #EFEFE9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .card-platform {
+      font-size: 11px;
+      color: var(--ink-secondary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
+
+    .footer-swap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      height: 18px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .footer-swap-default,
+    .footer-swap-hover {
+      font-size: 11px;
+      white-space: nowrap;
+      transition:
+        transform 0.32s var(--spring),
+        opacity 0.24s ease;
+    }
+
+    .footer-swap-default {
+      color: var(--ink-muted);
+    }
+
+    .footer-swap-hover {
+      position: absolute;
+      right: 0;
+      color: var(--tea);
+      font-weight: 500;
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    .folio-wrapper:hover .footer-swap-default,
+    .folio-wrapper:focus-visible .footer-swap-default {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    .folio-wrapper:hover .footer-swap-hover,
+    .folio-wrapper:focus-visible .footer-swap-hover {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* =====================================================================
+       KINETIC SLIDE-OUT PHYSICS (HOVER & GLOBAL EXPAND WAVE)
+       ===================================================================== */
+    .folio-wrapper:hover .inner-card,
+    .folio-wrapper:focus-visible .inner-card,
+    .folio-grid.is-expanded .folio-wrapper .inner-card {
+      transform: translate3d(0, -39px, 0);
+    }
+
+    .folio-wrapper:hover .inner-card--oss,
+    .folio-grid.is-expanded .folio-wrapper .inner-card--oss {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 8px 20px rgba(24, 24, 22, 0.22);
+    }
+
+    .folio-wrapper:hover .inner-card--app,
+    .folio-grid.is-expanded .folio-wrapper .inner-card--app {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.92),
+        inset 0 0 0 1px rgba(24, 24, 22, 0.085),
+        0 8px 18px rgba(24, 24, 22, 0.085);
+    }
+
+    .folio-wrapper:hover .inner-card--skill,
+    .folio-grid.is-expanded .folio-wrapper .inner-card--skill {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 8px 20px rgba(46, 82, 66, 0.24);
+    }
+
+    .folio-wrapper:hover .grip-capsule,
+    .folio-wrapper:focus-visible .grip-capsule,
+    .folio-grid.is-expanded .folio-wrapper .grip-capsule {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-4px);
+    }
+
+    .folio-wrapper:hover .inner-action-bar,
+    .folio-wrapper:focus-visible .inner-action-bar,
+    .folio-grid.is-expanded .folio-wrapper .inner-action-bar {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+      transition-delay: 0.04s;
+    }
+
+    .folio-wrapper:hover .sleeve-shell,
+    .folio-wrapper:focus-visible .sleeve-shell {
+      transform: translate3d(0, -2.5px, 0);
+      filter:
+        drop-shadow(0 2px 5px rgba(24, 24, 22, 0.045))
+        drop-shadow(0 16px 32px rgba(24, 24, 22, 0.085));
+    }
+
+    .folio-wrapper:hover .sleeve-card,
+    .folio-wrapper:focus-visible .sleeve-card {
+      box-shadow:
+        inset 0 0 0 1px rgba(46, 82, 66, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 1);
+    }
+
+    /* Staggered wave timing when global toggle is switched */
+    .folio-grid.is-waving .folio-wrapper .inner-card {
+      transition-delay: var(--wave-delay, 0ms);
+    }
+
+    .folio-grid.is-waving .folio-wrapper .inner-action-bar {
+      transition-delay: calc(var(--wave-delay, 0ms) + 45ms);
+    }
+
+    /* Subtle staggered entrance */
+    @keyframes folioIn {
+      from {
+        opacity: 0;
+        transform: translate3d(0, 8px, 0);
+      }
+      to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+    }
+
+    .folio-enter {
+      animation: folioIn 0.36s var(--spring) both;
+    }
+
+    /* =====================================================================
+       EMPTY STATE & QUIET FOOTER
+       ===================================================================== */
+    .empty-state {
+      display: none;
+      padding: 92px 20px;
+      text-align: center;
+    }
+
+    .empty-state.is-visible {
+      display: block;
+    }
+
+    .empty-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    .empty-desc {
+      margin: 6px 0 0;
+      font-size: 12.5px;
+      color: var(--ink-muted);
+    }
+
+    .empty-reset-btn {
+      margin-top: 20px;
+      padding: 7px 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(24, 24, 22, 0.1);
+      background-color: var(--surface);
+      color: var(--ink);
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(24, 24, 22, 0.04);
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .empty-reset-btn:hover {
+      background-color: var(--tea);
+      border-color: var(--tea);
+      color: #FFFFFF;
+    }
+
+    .page-footer {
+      margin-top: 76px;
+      padding-top: 20px;
+      border-top: 1px solid var(--hairline);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--ink-muted);
+    }
+
+    .footer-counter {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+    }
+
+    /* =====================================================================
+       RIGHT-SIDE SWISS EDITORIAL DRAWER (450px)
+       ===================================================================== */
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background-color: rgba(24, 24, 22, 0.22);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.28s ease;
+    }
+
+    .drawer-backdrop.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      z-index: 60;
+      height: 100%;
+      width: 100%;
+      max-width: 450px;
+      background-color: var(--surface);
+      border-left: 1px solid rgba(24, 24, 22, 0.08);
+      box-shadow: -12px 0 40px rgba(24, 24, 22, 0.12);
+      display: flex;
+      flex-direction: column;
+      transform: translate3d(100%, 0, 0);
+      transition: transform 0.42s var(--spring);
+      will-change: transform;
+    }
+
+    .drawer-panel.is-open {
+      transform: translate3d(0, 0, 0);
+    }
+
+    .drawer-accent-strip {
+      height: 3px;
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    .drawer-header {
+      padding: 24px 28px 20px;
+      border-bottom: 1px solid var(--hairline);
+      flex-shrink: 0;
+    }
+
+    .drawer-meta-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .drawer-meta-line {
+      font-size: 11.5px;
+      color: var(--ink-secondary);
+      line-height: 1.4;
+    }
+
+    .drawer-meta-sep {
+      margin: 0 5px;
+      color: rgba(147, 147, 139, 0.55);
+    }
+
+    .drawer-meta-freq {
+      color: var(--tea);
+      font-weight: 500;
+    }
+
+    .drawer-close-btn {
+      border: 0;
+      background: transparent;
+      padding: 4px 8px;
+      border-radius: 7px;
+      color: var(--ink-muted);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+      transition: background-color 0.18s ease, color 0.18s ease;
+    }
+
+    .drawer-close-btn:hover {
+      background-color: var(--canvas);
+      color: var(--ink);
+    }
+
+    .drawer-title {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      line-height: 1.25;
+      color: var(--ink);
+    }
+
+    .drawer-subtitle {
+      margin: 6px 0 0;
+      font-size: 13.5px;
+      line-height: 1.45;
+      color: var(--ink-secondary);
+    }
+
+    .drawer-body {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      padding: 24px 28px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .drawer-body::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .drawer-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .drawer-body::-webkit-scrollbar-thumb {
+      background: rgba(24, 24, 22, 0.12);
+      border-radius: 999px;
+    }
+
+    /* Swiss 2x2 Hairline Parameter Matrix */
+    .param-matrix {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      border: 1px solid var(--hairline);
+      border-radius: 12px;
+      overflow: hidden;
+      background-color: var(--surface);
+    }
+
+    .param-cell {
+      padding: 13px 15px;
+    }
+
+    .param-cell:nth-child(1) {
+      border-right: 1px solid var(--hairline);
+      border-bottom: 1px solid var(--hairline);
+    }
+
+    .param-cell:nth-child(2) {
+      border-bottom: 1px solid var(--hairline);
+    }
+
+    .param-cell:nth-child(3) {
+      border-right: 1px solid var(--hairline);
+    }
+
+    .param-label {
+      font-size: 10.5px;
+      color: var(--ink-muted);
+      letter-spacing: 0.02em;
+    }
+
+    .param-value {
+      margin-top: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+      line-height: 1.35;
+    }
+
+    .drawer-section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .drawer-section-label {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+    }
+
+    .curator-quote {
+      margin: 0;
+      padding: 12px 15px;
+      border-left: 2px solid var(--tea);
+      border-radius: 0 10px 10px 0;
+      background-color: var(--canvas);
+      font-size: 13.5px;
+      line-height: 1.72;
+      color: #2A2C29;
+    }
+
+    .highlights-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .highlights-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      line-height: 1.65;
+      color: #30322E;
+    }
+
+    .highlights-num {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--tea);
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
+
+    /* Drawer Bottom Action Blocks */
+    .inline-copy-btn {
+      border: 0;
+      border-radius: 6px;
+      padding: 4px 10px;
+      background-color: var(--tea-mist);
+      color: var(--tea);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.18s ease, color 0.18s ease;
+    }
+
+    .inline-copy-btn:hover {
+      background-color: var(--tea);
+      color: #FFFFFF;
+    }
+
+    .cli-box {
+      padding: 14px 16px;
+      border-radius: 12px;
+      background-color: var(--obsidian);
+      color: #EAECEB;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.5;
+      overflow-x: auto;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    .cli-prompt {
+      color: #848983;
+      margin-right: 8px;
+      user-select: none;
+    }
+
+    .prompt-box {
+      margin: 0;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background-color: var(--canvas);
+      border: 1px solid var(--hairline);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      line-height: 1.68;
+      color: #2A2C29;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .website-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 15px 16px;
+      border-radius: 12px;
+      background-color: var(--canvas);
+      border: 1px solid var(--hairline);
+      text-decoration: none;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .website-card:hover {
+      background-color: #ECEEE9;
+      border-color: rgba(24, 24, 22, 0.14);
+    }
+
+    .website-meta {
+      min-width: 0;
+    }
+
+    .website-domain {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .website-url {
+      margin-top: 3px;
+      font-size: 11.5px;
+      color: var(--ink-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .website-cta {
+      flex-shrink: 0;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--tea);
+    }
+
+    .drawer-footer {
+      padding: 16px 28px;
+      border-top: 1px solid var(--hairline);
+      background-color: rgba(245, 245, 242, 0.65);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .drawer-btn-primary {
+      flex: 1 1 auto;
+      padding: 10px 16px;
+      border-radius: 11px;
+      border: 0;
+      background-color: var(--tea);
+      color: #F4F7F5;
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .drawer-btn-primary:hover {
+      background-color: var(--tea-hover);
+    }
+
+    .drawer-btn-primary--oss {
+      background-color: var(--obsidian);
+    }
+
+    .drawer-btn-primary--oss:hover {
+      background-color: #2E302D;
+    }
+
+    .drawer-btn-secondary {
+      flex-shrink: 0;
+      padding: 10px 16px;
+      border-radius: 11px;
+      border: 1px solid rgba(24, 24, 22, 0.11);
+      background-color: var(--surface);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .drawer-btn-secondary:hover {
+      background-color: var(--canvas);
+      border-color: rgba(24, 24, 22, 0.18);
+    }
+
+    /* =====================================================================
+       MINIMALIST FLOATING TOAST (ZERO DOTS)
+       ===================================================================== */
+    .toast-pill {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      z-index: 80;
+      padding: 8px 18px;
+      border-radius: 999px;
+      background-color: var(--ink);
+      color: #F5F5F2;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      box-shadow: 0 10px 28px rgba(24, 24, 22, 0.22);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transform: translate3d(-50%, 16px, 0);
+      opacity: 0;
+      pointer-events: none;
+      transition:
+        transform 0.32s var(--spring),
+        opacity 0.22s ease;
+    }
+
+    .toast-pill.is-visible {
+      transform: translate3d(-50%, 0, 0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Floating Minimal Toast Notification -->
+  <div id="toast" class="toast-pill" role="status" aria-live="polite"></div>
+
+  <!-- Main 1440px Gallery Shell -->
+  <div class="page-shell">
+
+    <!-- ===================================================================
+         SINGLE-ROW HEADER TOOLBAR
+         =================================================================== -->
+    <header class="topbar">
+      <!-- Left: Minimalist Brand Title -->
+      <div class="brand-group">
+        <h1 class="brand-title">器物志</h1>
+        <span class="brand-divider" aria-hidden="true">/</span>
+        <p class="brand-subtitle">Curated Tools &amp; Skills</p>
+      </div>
+
+      <!-- Center / Right: Filter Tabs + Search + Hardware Toggle -->
+      <div class="toolbar-controls">
+        <!-- Category Filter Tabs with Sliding White Pill -->
+        <nav id="seg-track" class="seg-track" aria-label="工具分类筛选">
+          <div id="seg-pill" class="seg-pill" aria-hidden="true"></div>
+          <button type="button" class="seg-btn is-active" data-filter="all">
+            <span>全部</span>
+            <span class="seg-count">10</span>
+          </button>
+          <button type="button" class="seg-btn" data-filter="oss">
+            <span>开源项目</span>
+            <span class="seg-count">3</span>
+          </button>
+          <button type="button" class="seg-btn" data-filter="app">
+            <span>精选软件</span>
+            <span class="seg-count">4</span>
+          </button>
+          <button type="button" class="seg-btn" data-filter="skill">
+            <span>AI Skill</span>
+            <span class="seg-count">3</span>
+          </button>
+        </nav>
+
+        <!-- Minimalist Real-Time Search -->
+        <div class="search-wrap">
+          <input
+            id="search-input"
+            class="search-input"
+            type="text"
+            autocomplete="off"
+            placeholder="搜索名称、平台或替代品..."
+            aria-label="搜索工具"
+          />
+          <button
+            id="search-clear"
+            class="search-clear"
+            type="button"
+            aria-label="清空搜索"
+          >×</button>
+        </div>
+
+        <!-- Hardware-Style Toggle Switch: 展开内芯 -->
+        <button
+          id="expand-toggle"
+          class="hw-toggle"
+          type="button"
+          role="switch"
+          aria-checked="false"
+        >
+          <span id="expand-label">展开内芯</span>
+          <span class="hw-track" aria-hidden="true">
+            <span class="hw-thumb"></span>
+          </span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ===================================================================
+         STRICT 5-COLUMN PULL-OUT SLEEVE GALLERY
+         =================================================================== -->
+    <main>
+      <div id="folio-grid" class="folio-grid"></div>
+
+      <!-- Empty Search State -->
+      <div id="empty-state" class="empty-state">
+        <p class="empty-title">未找到匹配的器物</p>
+        <p class="empty-desc">尝试换一个关键词，或重置当前分类与搜索条件</p>
+        <button id="empty-reset-btn" class="empty-reset-btn" type="button">重置筛选</button>
+      </div>
+    </main>
+
+    <!-- Quiet Footer -->
+    <footer class="page-footer">
+      <span>悬停滑出快捷内芯 · 点击白瓷封套阅读推荐手记</span>
+      <span id="footer-counter" class="footer-counter">ARCHIVE · 10 / 10</span>
+    </footer>
+  </div>
+
+  <!-- ===================================================================
+       RIGHT-SIDE SWISS EDITORIAL DRAWER (450px)
+       =================================================================== -->
+  <div id="drawer-backdrop" class="drawer-backdrop" aria-hidden="true"></div>
+
+  <aside
+    id="drawer-panel"
+    class="drawer-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="drawer-title"
+  >
+    <div id="drawer-accent" class="drawer-accent-strip"></div>
+    <div id="drawer-header" class="drawer-header"></div>
+    <div id="drawer-body" class="drawer-body"></div>
+    <div id="drawer-footer" class="drawer-footer"></div>
+  </aside>
+
+  <!-- ===================================================================
+       PURE VANILLA JAVASCRIPT ENGINE (ZERO EXTERNAL DEPENDENCIES)
+       =================================================================== -->
+  <script>
+    (function () {
+      'use strict';
+
+      /* -------------------------------------------------------------------
+         1. CATEGORY METADATA & 10 CURATED ITEMS
+         ------------------------------------------------------------------- */
+      var CATEGORY_META = {
+        oss: {
+          label: '开源项目',
+          accent: '#1C1D1B',
+        },
+        app: {
+          label: '精选软件',
+          accent: 'linear-gradient(90deg, #DDE0DA 0%, #C7CBC4 100%)',
+        },
+        skill: {
+          label: 'AI Skill',
+          accent: '#2E5242',
+        },
+      };
+
+      var SPECIMENS = [
+        {
+          id: 'shadcn-vue',
+          category: 'oss',
+          pricing: 'MIT 开源',
+          name: 'shadcn-vue',
+          tagline: '源码级 Vue 组件集合',
+          summary: '不是传统的 npm 依赖包，而是把精雕细琢的组件源码直接复制到你的项目里，审美与定制自由度拉满。',
+          platform: 'Vue / Nuxt',
+          replaces: '替代传统组件库',
+          frequency: '装机必备',
+          threshold: '中等 · 需了解 Tailwind',
+          cli: 'npx shadcn-vue@latest init',
+          domain: 'shadcn-vue.com',
+          url: 'https://www.shadcn-vue.com/',
+          note: '它彻底改变了前端组件库的选型思路——不再被锁死在黑盒样式里打补丁，而是把可维护的组件源码直接交到你手里。',
+          highlights: [
+            '基于无头原语与 Tailwind CSS，键盘焦点与无障碍细节极为扎实',
+            '默认中性极简美学非常耐看，微调设计变量即可贴合个人站点气质',
+            '代码直接落盘项目目录，随时按需删改，没有大版本升级的破坏包袱',
+          ],
+        },
+        {
+          id: 'excalidraw',
+          category: 'oss',
+          pricing: 'MIT 开源',
+          name: 'Excalidraw',
+          tagline: '手绘质感架构白板',
+          summary: '自带恰到好处的手绘线条感，画系统架构和产品原型既有呼吸感又极具表现力，支持纯本地离线保存。',
+          platform: 'Web · 跨平台',
+          replaces: '替代 Visio / 传统流程图',
+          frequency: '高频复用',
+          threshold: '极低 · 打开即画',
+          cli: 'npx excalidraw',
+          domain: 'excalidraw.com',
+          url: 'https://excalidraw.com/',
+          note: '很多时候不是画不出架构图，而是被过于刻板的矢量软件劝退了。它自带纸笔的松弛感，随手拉几个方框都很好看。',
+          highlights: [
+            '克制自然的手绘美学，画架构图、流程草图与技术文章配图零心理负担',
+            '支持端到端加密多人实时协作，也可直接本地部署或离线编辑',
+            '导出 PNG / SVG 极净，支持将可编辑场景源码直接嵌入图片文件中',
+          ],
+        },
+        {
+          id: 'localsend',
+          category: 'oss',
+          pricing: 'Apache 开源',
+          name: 'LocalSend',
+          tagline: '跨平台局域网快传',
+          summary: '无需登录账号也不经云端中转，局域网内满速互传文件与文本，彻底打通 Mac、Windows 与手机壁垒。',
+          platform: '全平台',
+          replaces: '替代隔空投送',
+          frequency: '装机必备',
+          threshold: '极低 · 同网即传',
+          cli: 'brew install --cask localsend',
+          domain: 'localsend.org',
+          url: 'https://localsend.org/',
+          note: '只要身边同时存在苹果、安卓或 Windows 设备，它就是不可替代的局域网基础设施——安静、纯粹、永远在线。',
+          highlights: [
+            '纯本地局域网直连传输，全程加密且不经过任何第三方服务器',
+            '全平台原生客户端覆盖 macOS、Windows、Linux、iOS 与 Android',
+            '无文件体积限制，支持直接发送剪贴板文本与整目录打包传输',
+          ],
+        },
+        {
+          id: 'raycast',
+          category: 'app',
+          pricing: '个人免费',
+          name: 'Raycast',
+          tagline: 'macOS 效率启动器',
+          summary: '把应用启动、剪贴板历史、窗口管理与脚本工作流收进一个快捷键，装完它系统自带搜索就可以退休了。',
+          platform: 'macOS',
+          replaces: '替代 Spotlight',
+          frequency: '每日高频',
+          threshold: '极低 · 5 分钟上手',
+          domain: 'raycast.com',
+          url: 'https://www.raycast.com/',
+          note: '装上它的第一周我就彻底停用了系统自带搜索。它不是简单的启动框，而是把整台 Mac 的键盘操作流打通的中枢。',
+          highlights: [
+            '原生 Swift 构建，应用检索、汇率换算与窗口分屏几乎零延迟',
+            '个人免费版自带剪贴板历史、文本片段与脚本命令，开箱即满血',
+            '插件生态审美极高，一键在键盘内联动 GitHub、Linear 与本地工具',
+          ],
+        },
+        {
+          id: 'orbstack',
+          category: 'app',
+          pricing: '个人免费',
+          name: 'OrbStack',
+          tagline: '轻量容器与 Linux 引擎',
+          summary: '2 秒冷启动、极低内存与电量占用，让 Mac 跑 Docker 容器和 Linux 虚拟机终于不再像直升机起飞。',
+          platform: 'macOS',
+          replaces: '替代 Docker Desktop',
+          frequency: '每日高频',
+          threshold: '极低 · 无缝迁移',
+          domain: 'orbstack.dev',
+          url: 'https://orbstack.dev/',
+          note: '如果你曾被 Docker Desktop 的风扇呼啸和内存暴涨折磨过，换上 OrbStack 的那一刻就像给 Mac 做了一次轻量化手术。',
+          highlights: [
+            '2 秒级冷启动与极低后台待机功耗，合盖外出再也不怕偷跑电量',
+            '自动为容器分配本地域名与 HTTPS，多服务本地联调极其清爽',
+            '内置轻量 Linux 虚拟机，与 macOS 文件系统及网络无缝打通',
+          ],
+        },
+        {
+          id: 'cleanshot',
+          category: 'app',
+          pricing: '买断制',
+          name: 'CleanShot X',
+          tagline: '全能截图与录屏工具',
+          summary: '自动加圆角阴影衬底、滚动长截图、一键隐藏桌面杂物，写文章和做产品演示的配图质感瞬间拉升。',
+          platform: 'macOS',
+          replaces: '替代系统截屏',
+          frequency: '每日高频',
+          threshold: '极低 · 开箱即用',
+          domain: 'cleanshot.com',
+          url: 'https://cleanshot.com/',
+          note: '只要你写技术博客、做产品演示或经常反馈界面细节，它带来的每一秒顺滑与每一张体面截图都值回票价。',
+          highlights: [
+            '一键隐藏杂乱桌面图标，临时截图录屏再也不用先整理桌面',
+            '内置优雅渐变与纯色衬底、圆角阴影与智能打码，截完即成品图',
+            '集滚动长截图、丝滑 GIF/MP4 录屏与本地文字识别 OCR 于一身',
+          ],
+        },
+        {
+          id: 'obsidian',
+          category: 'app',
+          pricing: '个人免费',
+          name: 'Obsidian',
+          tagline: '本地优先双链知识库',
+          summary: '所有文章都以纯 Markdown 文件存在自己硬盘里，响应快如闪电，配合插件体系能长成你的第二大脑。',
+          platform: '全平台',
+          replaces: '替代云端笔记',
+          frequency: '每日高频',
+          threshold: '低 · 纯 Markdown',
+          domain: 'obsidian.md',
+          url: 'https://obsidian.md/',
+          note: '云端笔记产品来来去去，唯独躺在本地硬盘里的纯 Markdown 文件夹最让人安心。它既能极简写作，也能长成私人图书馆。',
+          highlights: [
+            '100% 本地纯文本 Markdown 存储，断网秒开且永久无平台锁定风险',
+            '双向链接与局部图谱让跨越数年的灵感与笔记自然发生化学反应',
+            '极其克制且强大的插件与主题生态，可随个人习惯自由演进',
+          ],
+        },
+        {
+          id: 'ui-refine',
+          category: 'skill',
+          pricing: '自研免费',
+          name: '极简 UI 审美重构师',
+          tagline: '前端界面去 AI 味指令',
+          summary: '内置 Apple 与瑞士编辑部留白比例、字距与材质克制准则，一键把充满模板感的前端页面重构出高级质感。',
+          platform: 'Claude · Cursor',
+          replaces: '替代通用前端模板',
+          frequency: '高频复用',
+          threshold: '极低 · 复制即用',
+          preview: '去除 AI 味 · 瑞士极简重构',
+          prompt:
+            '# Skill: 极简 UI 审美重构师\n' +
+            '请以 Apple 与 Dieter Rams 的极简工业设计准则重构我提供的界面代码：\n' +
+            '1. 彻底去除廉价 AI 模板味：禁用刺眼霓虹渐变、无意义发光阴影与冗余徽章；使用温润中性画布与单一克制强调色建立视觉秩序。\n' +
+            '2. 雕琢材质与边界：善用 1px 低透明度细线描边、微妙顶部内高光与柔和多层漫反射阴影营造实体质感。\n' +
+            '3. 精准控制排版层级：拉开主标题、定位副标题、正文与等宽元信息的字号与灰度对比，全局开启 tabular-nums。\n' +
+            '4. 动效克制且有物理感：统一采用 cubic-bezier(0.22, 1, 0.36, 1)，仅为核心交互提供细腻微反馈。',
+          note: '页面功能写完后往往只差最后 10% 的留白与边界微调就能脱胎换骨。这个指令像一位挑剔的设计总监，专门帮你做减法。',
+          highlights: [
+            '精准识别常见“AI 生成感”视觉病灶，直接给出可落地的 CSS 精修方案',
+            '适合配置为 Cursor Rule 或 Claude Project 长期系统规则',
+            '对个人主页、工具导航与独立产品的视觉完成度提升立竿见影',
+          ],
+        },
+        {
+          id: 'weekly-digest',
+          category: 'skill',
+          pricing: '自研免费',
+          name: '周刊灵感提炼官',
+          tagline: '碎片笔记转周刊结构',
+          summary: '把一周零散的摘录和想法丢进去，自动剔除水分、提炼核心洞察，生成带有独立专栏口吻的周刊短评。',
+          platform: 'Claude · GPT',
+          replaces: '替代手动整理素材',
+          frequency: '每周必用',
+          threshold: '极低 · 粘贴笔记即用',
+          preview: '长文提炼为周刊短评',
+          prompt:
+            '# Skill: 周刊灵感提炼官\n' +
+            '请将我提供的一周零散摘录、链接笔记与碎片想法整理为可直接发布的个人周刊短评：\n' +
+            '1. 剔除水分：去除套话与泛泛概括，精准提炼每条素材背后的核心洞察、反常识观点或实用价值。\n' +
+            '2. 保持人味：采用克制、温和、有个人立场的独立专栏口吻，杜绝“综上所述”“赋能”等 AI 腔。\n' +
+            '3. 结构编排：按主题归类，每条输出「精炼标题 + 3 句核心洞察 + 一句延伸思考」。',
+          note: '收藏夹里攒了一周的好内容却总懒得动笔整理。用它先过一遍，十分钟就能产出一期节奏耐读的个人周刊初稿。',
+          highlights: [
+            '彻底摆脱呆板的机器摘要腔，保留独立创作者的叙事质感',
+            '自动将碎片化链接与随想归类串联，大幅降低每周输出阻力',
+            '同样适用于双周技术分享、读书笔记复盘与月度工作总结',
+          ],
+        },
+        {
+          id: 'git-commit',
+          category: 'skill',
+          pricing: '自研免费',
+          name: 'Git 规范提交助手',
+          tagline: '语义化提交信息生成',
+          summary: '读取当前 git diff 变更上下文，直接输出符合 Conventional Commits 规范且言简意赅的提交说明。',
+          platform: 'Cursor · CLI',
+          replaces: '替代手写 Commit',
+          frequency: '每日高频',
+          threshold: '极低 · 贴入 Diff 即用',
+          preview: '自动生成语义化 Commit',
+          prompt:
+            '# Skill: Git 规范提交助手\n' +
+            '请分析我提供的 git diff --staged 变更上下文，生成符合 Conventional Commits 规范的提交信息：\n' +
+            '1. 标题格式：<type>(<scope>): <subject>，控制在 50 字符内，祈使语气且末尾不加句号。\n' +
+            '2. 精准选用 feat / fix / refactor / style / perf / docs / chore。\n' +
+            '3. 若改动涉及多个模块，空一行后用 2–3 条简短要点说明“为何这样改”而非机械罗列文件名。\n' +
+            '4. 末尾附带可直接复制执行的 git commit 命令。',
+          note: '整洁的提交历史是写给半年后自己的情书。用它告别随手敲下的“fix bug”，让仓库时间轴像出版物目录一样清晰。',
+          highlights: [
+            '聚焦修改意图与影响范围，避免流于表面的文件名流水账',
+            '严格遵守语义化规范，便于后续自动生成项目 Changelog',
+            '无缝配合 Cursor、Claude Code 或本地终端别名在提交前一键调用',
+          ],
+        },
+      ];
+
+      /* -------------------------------------------------------------------
+         2. STATE & SAFE DOM REFERENCES
+         ------------------------------------------------------------------- */
+      var activeFilter = 'all';
+      var searchQuery = '';
+      var isAllExpanded = false;
+      var activeDrawerItem = null;
+      var toastTimer = null;
+      var waveTimer = null;
+
+      var gridEl = document.getElementById('folio-grid');
+      var emptyStateEl = document.getElementById('empty-state');
+      var emptyResetBtn = document.getElementById('empty-reset-btn');
+      var footerCounterEl = document.getElementById('footer-counter');
+      var segPill = document.getElementById('seg-pill');
+      var segBtns = Array.prototype.slice.call(document.querySelectorAll('.seg-btn'));
+      var searchInput = document.getElementById('search-input');
+      var searchClearBtn = document.getElementById('search-clear');
+      var expandToggleBtn = document.getElementById('expand-toggle');
+      var expandLabelEl = document.getElementById('expand-label');
+      var toastEl = document.getElementById('toast');
+      var drawerBackdrop = document.getElementById('drawer-backdrop');
+      var drawerPanel = document.getElementById('drawer-panel');
+      var drawerAccent = document.getElementById('drawer-accent');
+      var drawerHeader = document.getElementById('drawer-header');
+      var drawerBody = document.getElementById('drawer-body');
+      var drawerFooter = document.getElementById('drawer-footer');
+
+      /* -------------------------------------------------------------------
+         3. UTILITIES (HTML ESCAPING, SAFE CLIPBOARD, TOAST, PILL POSITION)
+         ------------------------------------------------------------------- */
+      function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function showToast(message) {
+        if (!toastEl) return;
+        toastEl.textContent = message;
+        toastEl.classList.add('is-visible');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+          if (toastEl) toastEl.classList.remove('is-visible');
+        }, 2200);
+      }
+
+      /**
+       * Sandboxed-iframe-safe clipboard copy using temporary textarea + execCommand('copy')
+       */
+      function copyTextSafe(text, toastMsg) {
+        var success = false;
+        var textarea = null;
+        try {
+          textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.setAttribute('readonly', '');
+          textarea.style.position = 'fixed';
+          textarea.style.top = '-9999px';
+          textarea.style.left = '-9999px';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.focus();
+          textarea.select();
+          textarea.setSelectionRange(0, textarea.value.length);
+          success = document.execCommand('copy');
+        } catch (err) {
+          success = false;
+        } finally {
+          if (textarea && textarea.parentNode) {
+            textarea.parentNode.removeChild(textarea);
+          }
+        }
+
+        if (!success && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+          try {
+            navigator.clipboard.writeText(text).catch(function () {});
+            success = true;
+          } catch (err) {
+            success = false;
+          }
+        }
+
+        showToast(success ? toastMsg : '复制受限，请手动选择复制');
+        return success;
+      }
+
+      function flashButtonCopied(btn, originalText) {
+        if (!btn) return;
+        btn.textContent = '已复制';
+        if (btn._copyTimer) clearTimeout(btn._copyTimer);
+        btn._copyTimer = setTimeout(function () {
+          btn.textContent = originalText;
+        }, 1500);
+      }
+
+      function positionSegPill(targetBtn) {
+        if (!segPill || !targetBtn) return;
+        segPill.style.width = targetBtn.offsetWidth + 'px';
+        segPill.style.transform = 'translate3d(' + targetBtn.offsetLeft + 'px, 0, 0)';
+      }
+
+      /* -------------------------------------------------------------------
+         4. CARD RENDERING (TWO-LAYER SLIDE-OUT SLEEVE, ZERO ICONS/DOTS)
+         ------------------------------------------------------------------- */
+      function buildInnerActionBar(item) {
+        if (item.category === 'oss') {
+          return (
+            '<code class="inner-payload inner-payload--mono" title="' +
+            escapeHtml(item.cli) +
+            '">' +
+            escapeHtml(item.cli) +
+            '</code>' +
+            '<button type="button" class="inner-action-btn" data-copy-id="' +
+            escapeHtml(item.id) +
+            '">复制</button>'
+          );
+        }
+
+        if (item.category === 'app') {
+          return (
+            '<span class="inner-payload inner-payload--mono" title="' +
+            escapeHtml(item.domain) +
+            '">' +
+            escapeHtml(item.domain) +
+            '</span>' +
+            '<a class="inner-action-btn" href="' +
+            escapeHtml(item.url) +
+            '" target="_blank" rel="noopener noreferrer" data-direct-link="true">官网 ↗</a>'
+          );
+        }
+
+        return (
+          '<span class="inner-payload" title="' +
+          escapeHtml(item.preview) +
+          '">' +
+          escapeHtml(item.preview) +
+          '</span>' +
+          '<button type="button" class="inner-action-btn" data-copy-id="' +
+          escapeHtml(item.id) +
+          '">复制</button>'
+        );
+      }
+
+      function buildCardHTML(item, index) {
+        var meta = CATEGORY_META[item.category] || { label: '' };
+        var waveDelay = index * 36;
+        var enterDelay = index * 24;
+
+        return (
+          '<article class="folio-wrapper folio-enter" style="--wave-delay: ' +
+          waveDelay +
+          'ms; animation-delay: ' +
+          enterDelay +
+          'ms;" data-item-id="' +
+          escapeHtml(item.id) +
+          '" tabindex="0" role="button" aria-label="查看 ' +
+          escapeHtml(item.name) +
+          ' 推荐手记">' +
+          '  <div class="folio-stack">' +
+          '    <div class="inner-card inner-card--' +
+          escapeHtml(item.category) +
+          '">' +
+          '      <div class="grip-capsule" aria-hidden="true"></div>' +
+          '      <div class="inner-action-bar">' +
+          buildInnerActionBar(item) +
+          '      </div>' +
+          '    </div>' +
+          '    <div class="sleeve-shell">' +
+          '      <svg class="notch-rim" viewBox="0 0 29 15" fill="none" aria-hidden="true">' +
+          '        <path d="M 0 0.5 L 2 0.5 A 12.5 12.5 0 0 0 27 0.5 L 29 0.5" stroke="rgba(24, 24, 22, 0.09)" stroke-width="1" />' +
+          '      </svg>' +
+          '      <div class="sleeve-card">' +
+          '        <div class="sleeve-sheen" aria-hidden="true"></div>' +
+          '        <div class="card-top-row">' +
+          '          <span class="card-category">' +
+          escapeHtml(meta.label) +
+          '</span>' +
+          '          <span class="card-pricing">' +
+          escapeHtml(item.pricing) +
+          '</span>' +
+          '        </div>' +
+          '        <div class="card-title-block">' +
+          '          <h2 class="card-name">' +
+          escapeHtml(item.name) +
+          '</h2>' +
+          '          <p class="card-tagline">' +
+          escapeHtml(item.tagline) +
+          '</p>' +
+          '        </div>' +
+          '        <p class="card-summary">' +
+          escapeHtml(item.summary) +
+          '</p>' +
+          '        <div class="card-footer">' +
+          '          <span class="card-platform">' +
+          escapeHtml(item.platform) +
+          '</span>' +
+          '          <span class="footer-swap">' +
+          '            <span class="footer-swap-default">' +
+          escapeHtml(item.replaces) +
+          '</span>' +
+          '            <span class="footer-swap-hover">手记 →</span>' +
+          '          </span>' +
+          '        </div>' +
+          '      </div>' +
+          '    </div>' +
+          '  </div>' +
+          '</article>'
+        );
+      }
+
+      /* -------------------------------------------------------------------
+         5. FILTERING & GRID RENDER PIPELINE
+         ------------------------------------------------------------------- */
+      function getFilteredSpecimens() {
+        var q = searchQuery.trim().toLowerCase();
+        return SPECIMENS.filter(function (item) {
+          if (activeFilter !== 'all' && item.category !== activeFilter) {
+            return false;
+          }
+          if (!q) return true;
+          var haystack = [
+            item.name,
+            item.tagline,
+            item.summary,
+            item.platform,
+            item.replaces,
+            item.pricing,
+            item.cli || '',
+            item.domain || '',
+            item.preview || '',
+          ]
+            .join(' ')
+            .toLowerCase();
+          return haystack.indexOf(q) !== -1;
+        });
+      }
+
+      function renderGrid() {
+        if (!gridEl || !emptyStateEl) return;
+        var list = getFilteredSpecimens();
+
+        if (list.length === 0) {
+          gridEl.innerHTML = '';
+          gridEl.style.display = 'none';
+          emptyStateEl.classList.add('is-visible');
+        } else {
+          gridEl.style.display = '';
+          emptyStateEl.classList.remove('is-visible');
+          gridEl.innerHTML = list
+            .map(function (item, idx) {
+              return buildCardHTML(item, idx);
+            })
+            .join('');
+        }
+
+        if (footerCounterEl) {
+          footerCounterEl.textContent = 'ARCHIVE · ' + list.length + ' / ' + SPECIMENS.length;
+        }
+      }
+
+      /* -------------------------------------------------------------------
+         6. RIGHT-SIDE SWISS EDITORIAL DRAWER
+         ------------------------------------------------------------------- */
+      function buildDrawerActionBlock(item) {
+        if (item.category === 'oss') {
+          return (
+            '<section>' +
+            '  <div class="drawer-section-head">' +
+            '    <h3 class="drawer-section-label">终端安装命令</h3>' +
+            '    <button type="button" id="drawer-inline-copy" class="inline-copy-btn">复制命令</button>' +
+            '  </div>' +
+            '  <div class="cli-box"><span class="cli-prompt">$</span>' +
+            escapeHtml(item.cli) +
+            '</div>' +
+            '</section>'
+          );
+        }
+
+        if (item.category === 'skill') {
+          return (
+            '<section>' +
+            '  <div class="drawer-section-head">' +
+            '    <h3 class="drawer-section-label">System Prompt 全文</h3>' +
+            '    <button type="button" id="drawer-inline-copy" class="inline-copy-btn">复制指令</button>' +
+            '  </div>' +
+            '  <pre class="prompt-box">' +
+            escapeHtml(item.prompt) +
+            '</pre>' +
+            '</section>'
+          );
+        }
+
+        return (
+          '<section>' +
+          '  <div class="drawer-section-head">' +
+          '    <h3 class="drawer-section-label">官方获取地址</h3>' +
+          '  </div>' +
+          '  <a class="website-card" href="' +
+          escapeHtml(item.url) +
+          '" target="_blank" rel="noopener noreferrer">' +
+          '    <div class="website-meta">' +
+          '      <div class="website-domain">' +
+          escapeHtml(item.domain) +
+          '</div>' +
+          '      <div class="website-url">' +
+          escapeHtml(item.url) +
+          '</div>' +
+          '    </div>' +
+          '    <span class="website-cta">访问官网 ↗</span>' +
+          '  </a>' +
+          '</section>'
+        );
+      }
+
+      function getCopyPayload(item) {
+        if (item.category === 'oss') {
+          return {
+            text: item.cli,
+            msg: '已复制 ' + item.name + ' 安装命令',
+          };
+        }
+        if (item.category === 'skill') {
+          return {
+            text: item.prompt,
+            msg: '已复制「' + item.name + '」Prompt',
+          };
+        }
+        return {
+          text: item.name + '（' + item.tagline + '）— ' + item.summary + ' ' + item.url,
+          msg: '已复制 ' + item.name + ' 推荐信息',
+        };
+      }
+
+      function openDrawer(item) {
+        if (!drawerPanel || !drawerBackdrop || !drawerHeader || !drawerBody || !drawerFooter) {
+          return;
+        }
+
+        activeDrawerItem = item;
+        var meta = CATEGORY_META[item.category] || { label: '', accent: '#2E5242' };
+
+        if (drawerAccent) {
+          drawerAccent.style.background = meta.accent;
+        }
+
+        drawerHeader.innerHTML =
+          '<div class="drawer-meta-bar">' +
+          '  <div class="drawer-meta-line">' +
+          '    <span>' +
+          escapeHtml(meta.label) +
+          '</span>' +
+          '    <span class="drawer-meta-sep">·</span>' +
+          '    <span>' +
+          escapeHtml(item.pricing) +
+          '</span>' +
+          '    <span class="drawer-meta-sep">·</span>' +
+          '    <span class="drawer-meta-freq">' +
+          escapeHtml(item.frequency) +
+          '</span>' +
+          '  </div>' +
+          '  <button type="button" id="drawer-close-btn" class="drawer-close-btn" aria-label="关闭推荐手记">ESC ×</button>' +
+          '</div>' +
+          '<h2 id="drawer-title" class="drawer-title">' +
+          escapeHtml(item.name) +
+          '</h2>' +
+          '<p class="drawer-subtitle">' +
+          escapeHtml(item.tagline) +
+          '</p>';
+
+        var highlightsHtml = item.highlights
+          .map(function (text, i) {
+            return (
+              '<li class="highlights-item">' +
+              '  <span class="highlights-num">0' +
+              (i + 1) +
+              '</span>' +
+              '  <span>' +
+              escapeHtml(text) +
+              '</span>' +
+              '</li>'
+            );
+          })
+          .join('');
+
+        drawerBody.innerHTML =
+          '<section class="param-matrix">' +
+          '  <div class="param-cell">' +
+          '    <div class="param-label">适用平台</div>' +
+          '    <div class="param-value">' +
+          escapeHtml(item.platform) +
+          '</div>' +
+          '  </div>' +
+          '  <div class="param-cell">' +
+          '    <div class="param-label">费用 / 协议</div>' +
+          '    <div class="param-value">' +
+          escapeHtml(item.pricing) +
+          '</div>' +
+          '  </div>' +
+          '  <div class="param-cell">' +
+          '    <div class="param-label">同类替代</div>' +
+          '    <div class="param-value">' +
+          escapeHtml(item.replaces) +
+          '</div>' +
+          '  </div>' +
+          '  <div class="param-cell">' +
+          '    <div class="param-label">上手门槛</div>' +
+          '    <div class="param-value">' +
+          escapeHtml(item.threshold) +
+          '</div>' +
+          '  </div>' +
+          '</section>' +
+          '<section>' +
+          '  <div class="drawer-section-head">' +
+          '    <h3 class="drawer-section-label">私藏评语</h3>' +
+          '  </div>' +
+          '  <blockquote class="curator-quote">' +
+          escapeHtml(item.note) +
+          '</blockquote>' +
+          '</section>' +
+          '<section>' +
+          '  <div class="drawer-section-head">' +
+          '    <h3 class="drawer-section-label">为什么推荐</h3>' +
+          '  </div>' +
+          '  <ul class="highlights-list">' +
+          highlightsHtml +
+          '</ul>' +
+          '</section>' +
+          buildDrawerActionBlock(item);
+
+        if (item.category === 'skill') {
+          drawerFooter.innerHTML =
+            '<button type="button" id="drawer-footer-copy" class="drawer-btn-primary">复制完整 Prompt</button>';
+        } else {
+          var primaryLabel = item.category === 'oss' ? '前往开源主页 ↗' : '前往官方网站 ↗';
+          var primaryClass =
+            item.category === 'oss'
+              ? 'drawer-btn-primary drawer-btn-primary--oss'
+              : 'drawer-btn-primary';
+          var secondaryLabel = item.category === 'oss' ? '复制安装命令' : '复制推荐文案';
+
+          drawerFooter.innerHTML =
+            '<a class="' +
+            primaryClass +
+            '" href="' +
+            escapeHtml(item.url) +
+            '" target="_blank" rel="noopener noreferrer">' +
+            primaryLabel +
+            '</a>' +
+            '<button type="button" id="drawer-footer-copy" class="drawer-btn-secondary">' +
+            secondaryLabel +
+            '</button>';
+        }
+
+        // Bind drawer controls safely
+        var closeBtn = document.getElementById('drawer-close-btn');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', closeDrawer);
+        }
+
+        var inlineCopyBtn = document.getElementById('drawer-inline-copy');
+        if (inlineCopyBtn) {
+          var inlineOriginal = inlineCopyBtn.textContent;
+          inlineCopyBtn.addEventListener('click', function () {
+            var payload = getCopyPayload(item);
+            if (copyTextSafe(payload.text, payload.msg)) {
+              flashButtonCopied(inlineCopyBtn, inlineOriginal);
+            }
+          });
+        }
+
+        var footerCopyBtn = document.getElementById('drawer-footer-copy');
+        if (footerCopyBtn) {
+          var footerOriginal = footerCopyBtn.textContent;
+          footerCopyBtn.addEventListener('click', function () {
+            var payload = getCopyPayload(item);
+            if (copyTextSafe(payload.text, payload.msg)) {
+              flashButtonCopied(footerCopyBtn, footerOriginal);
+            }
+          });
+        }
+
+        drawerBody.scrollTop = 0;
+        drawerBackdrop.classList.add('is-open');
+        drawerPanel.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeDrawer() {
+        if (drawerBackdrop) drawerBackdrop.classList.remove('is-open');
+        if (drawerPanel) drawerPanel.classList.remove('is-open');
+        document.body.style.overflow = '';
+        activeDrawerItem = null;
+      }
+
+      /* -------------------------------------------------------------------
+         7. EVENT LISTENERS
+         ------------------------------------------------------------------- */
+      // Category segmented filter tabs
+      segBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          activeFilter = btn.getAttribute('data-filter') || 'all';
+          segBtns.forEach(function (other) {
+            other.classList.toggle('is-active', other === btn);
+          });
+          positionSegPill(btn);
+          renderGrid();
+        });
+      });
+
+      window.addEventListener('resize', function () {
+        var activeBtn = document.querySelector('.seg-btn.is-active');
+        positionSegPill(activeBtn);
+      });
+
+      // Real-time search input
+      if (searchInput) {
+        searchInput.addEventListener('input', function (e) {
+          searchQuery = e.target.value || '';
+          if (searchClearBtn) {
+            searchClearBtn.classList.toggle('is-visible', searchQuery.length > 0);
+          }
+          renderGrid();
+        });
+      }
+
+      if (searchClearBtn) {
+        searchClearBtn.addEventListener('click', function () {
+          searchQuery = '';
+          if (searchInput) {
+            searchInput.value = '';
+            searchInput.focus();
+          }
+          searchClearBtn.classList.remove('is-visible');
+          renderGrid();
+        });
+      }
+
+      // Empty state reset button
+      if (emptyResetBtn) {
+        emptyResetBtn.addEventListener('click', function () {
+          activeFilter = 'all';
+          searchQuery = '';
+          if (searchInput) searchInput.value = '';
+          if (searchClearBtn) searchClearBtn.classList.remove('is-visible');
+          segBtns.forEach(function (btn) {
+            var isAll = btn.getAttribute('data-filter') === 'all';
+            btn.classList.toggle('is-active', isAll);
+            if (isAll) positionSegPill(btn);
+          });
+          renderGrid();
+        });
+      }
+
+      // Global staggered wave toggle ("展开内芯")
+      if (expandToggleBtn && gridEl) {
+        expandToggleBtn.addEventListener('click', function () {
+          isAllExpanded = !isAllExpanded;
+          gridEl.classList.add('is-waving');
+          if (waveTimer) clearTimeout(waveTimer);
+          waveTimer = setTimeout(function () {
+            if (gridEl) gridEl.classList.remove('is-waving');
+          }, 820);
+
+          gridEl.classList.toggle('is-expanded', isAllExpanded);
+          expandToggleBtn.classList.toggle('is-active', isAllExpanded);
+          expandToggleBtn.setAttribute('aria-checked', String(isAllExpanded));
+          if (expandLabelEl) {
+            expandLabelEl.textContent = isAllExpanded ? '收回内芯' : '展开内芯';
+          }
+        });
+      }
+
+      // Cursor-following light sheen on outer sleeve
+      if (gridEl) {
+        gridEl.addEventListener('mousemove', function (e) {
+          var wrapper = e.target.closest('.folio-wrapper');
+          if (!wrapper) return;
+          var card = wrapper.querySelector('.sleeve-card');
+          if (!card) return;
+          var rect = card.getBoundingClientRect();
+          card.style.setProperty('--mx', e.clientX - rect.left + 'px');
+          card.style.setProperty('--my', e.clientY - rect.top + 'px');
+        });
+
+        // Delegated click handler: inner copy/link stops propagation; sleeve opens drawer
+        gridEl.addEventListener('click', function (e) {
+          var copyBtn = e.target.closest('[data-copy-id]');
+          if (copyBtn) {
+            e.stopPropagation();
+            var copyId = copyBtn.getAttribute('data-copy-id');
+            var copyItem = SPECIMENS.find(function (x) {
+              return x.id === copyId;
+            });
+            if (copyItem) {
+              var payload = getCopyPayload(copyItem);
+              if (copyTextSafe(payload.text, payload.msg)) {
+                flashButtonCopied(copyBtn, '复制');
+              }
+            }
+            return;
+          }
+
+          var directLink = e.target.closest('[data-direct-link]');
+          if (directLink) {
+            e.stopPropagation();
+            return;
+          }
+
+          var wrapper = e.target.closest('.folio-wrapper');
+          if (wrapper) {
+            var itemId = wrapper.getAttribute('data-item-id');
+            var found = SPECIMENS.find(function (x) {
+              return x.id === itemId;
+            });
+            if (found) openDrawer(found);
+          }
+        });
+
+        // Keyboard accessibility (Enter / Space opens drawer)
+        gridEl.addEventListener('keydown', function (e) {
+          if (e.key !== 'Enter' && e.key !== ' ') return;
+          if (e.target.closest('button, a')) return;
+          var wrapper = e.target.closest('.folio-wrapper');
+          if (!wrapper) return;
+          e.preventDefault();
+          var itemId = wrapper.getAttribute('data-item-id');
+          var found = SPECIMENS.find(function (x) {
+            return x.id === itemId;
+          });
+          if (found) openDrawer(found);
+        });
+      }
+
+      // Close drawer on frosted backdrop click or ESC key
+      if (drawerBackdrop) {
+        drawerBackdrop.addEventListener('click', closeDrawer);
+      }
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && activeDrawerItem) {
+          closeDrawer();
+        }
+      });
+
+      /* -------------------------------------------------------------------
+         8. INITIALIZATION
+         ------------------------------------------------------------------- */
+      function init() {
+        renderGrid();
+        requestAnimationFrame(function () {
+          var activeBtn = document.querySelector('.seg-btn.is-active');
+          positionSegPill(activeBtn);
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>

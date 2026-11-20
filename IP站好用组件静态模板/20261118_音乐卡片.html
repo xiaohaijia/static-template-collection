@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>「磁悬浮黑胶 · 声波信笺」高阶创意留言墙</title>
+  <style>
+    :root {
+      /* 画布基底：极简深邃冷调矿石黑灰，凸显发光茶绿与磨砂玻璃层次 */
+      --bg-canvas: #0e1311;
+      --card-surface: rgba(24, 32, 29, 0.72);
+      --card-hover: rgba(30, 41, 37, 0.92);
+      /* 主题点缀色：高阶赛博茶绿 / 翡翠微光 */
+      --tea-neon: #52b788;
+      --tea-bright: #95d5b2;
+      --tea-muted: #748c82;
+      --tea-dim: rgba(82, 183, 136, 0.12);
+      --tea-border: rgba(149, 213, 178, 0.14);
+      --text-primary: #f0f5f2;
+      --text-body: #c5d1cc;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background-color: var(--bg-canvas);
+      /* 极简微光网格 + 深空氛围光晕 */
+      background-image: 
+        radial-gradient(circle at 18% 15%, rgba(82, 183, 136, 0.11), transparent 42%),
+        radial-gradient(circle at 82% 85%, rgba(45, 106, 79, 0.14), transparent 45%),
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", sans-serif;
+      color: var(--text-primary);
+      padding: 56px 32px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 4列高阶秩序网格 */
+    .wall-grid {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 24px;
+    }
+
+    @media (max-width: 1180px) {
+      .wall-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 620px) {
+      .wall-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* =================================================================
+       核心创意：「磁悬浮黑胶唱片（Floating Vinyl Disc）」留言卡片
+       彻底打破矩形框架思维：每张留言卡右侧半嵌一枚可旋转的微缩黑胶唱片，
+       悬停时唱片缓缓滑出并开始旋转，把每条留言转化为“一首被收藏的声音”。
+    ================================================================= */
+    .vinyl-card {
+      --mx: 50%;
+      --my: 50%;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 256px;
+      padding: 24px 24px 20px;
+      border-radius: 20px;
+      background: var(--card-surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: 
+        0 18px 40px -15px rgba(0, 0, 0, 0.55),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                  background-color 0.35s ease,
+                  border-color 0.35s ease,
+                  box-shadow 0.45s ease;
+      overflow: hidden;
+    }
+
+    .vinyl-card:hover {
+      transform: translateY(-6px);
+      background: var(--card-hover);
+      border-color: var(--tea-border);
+      box-shadow: 
+        0 26px 50px -14px rgba(0, 0, 0, 0.7),
+        0 0 28px -6px rgba(82, 183, 136, 0.16),
+        inset 0 1px 0 0 rgba(149, 213, 178, 0.22);
+    }
+
+    /* 鼠标跟随的冷茶绿边缘漫反射 */
+    .vinyl-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        280px circle at var(--mx) var(--my),
+        rgba(82, 183, 136, 0.11),
+        transparent 70%
+      );
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      pointer-events: none;
+    }
+
+    .vinyl-card:hover::before {
+      opacity: 1;
+    }
+
+    /* =================================================================
+       创意视觉核心：右上角半露的微缩黑胶音轨盘（Vinyl Disc）
+    ================================================================= */
+    .vinyl-disc {
+      position: absolute;
+      top: -28px;
+      right: -28px;
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      /* 纯CSS精密黑胶音轨同心圆纹 + 金属光泽高光扇区 */
+      background: 
+        radial-gradient(circle, #0e1311 0 14%, var(--tea-neon) 15% 24%, #161d1a 25% 100%),
+        repeating-radial-gradient(
+          circle at center,
+          rgba(255, 255, 255, 0.04) 0px,
+          rgba(255, 255, 255, 0.04) 1px,
+          transparent 1px,
+          transparent 4px
+        );
+      box-shadow: 
+        -6px 8px 20px rgba(0, 0, 0, 0.45),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      opacity: 0.78;
+      transform: translate(0, 0) rotate(0deg);
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.4s ease;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* 唱片表面的扇形反光高光 */
+    .vinyl-disc::after {
+      content: "";
+      position: absolute;
+      inset: 2px;
+      border-radius: 50%;
+      background: conic-gradient(
+        from 35deg,
+        transparent 0deg,
+        rgba(149, 213, 178, 0.22) 28deg,
+        transparent 60deg,
+        transparent 180deg,
+        rgba(149, 213, 178, 0.16) 210deg,
+        transparent 245deg
+      );
+    }
+
+    /* 悬停时黑胶唱片轻盈探出并持续旋转 */
+    .vinyl-card:hover .vinyl-disc {
+      opacity: 1;
+      transform: translate(-6px, 6px);
+      animation: spinVinyl 9s linear infinite;
+    }
+
+    @keyframes spinVinyl {
+      from { transform: translate(-6px, 6px) rotate(0deg); }
+      to { transform: translate(-6px, 6px) rotate(360deg); }
+    }
+
+    /* 顶部栏：动态声波律动指示器 + 日期 */
+    .card-top {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      padding-right: 54px; /* 优雅避让右上角黑胶唱片 */
+    }
+
+    /* 3根极简声波频谱柱 */
+    .sound-bars {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 2.5px;
+      height: 11px;
+    }
+
+    .sound-bars span {
+      width: 2px;
+      background-color: var(--tea-neon);
+      border-radius: 2px;
+      transition: height 0.3s ease;
+    }
+
+    .sound-bars span:nth-child(1) { height: 5px; }
+    .sound-bars span:nth-child(2) { height: 10px; }
+    .sound-bars span:nth-child(3) { height: 7px; }
+
+    .vinyl-card:hover .sound-bars span:nth-child(1) {
+      animation: eqPulse 0.8s ease-in-out infinite alternate;
+    }
+    .vinyl-card:hover .sound-bars span:nth-child(2) {
+      animation: eqPulse 0.6s ease-in-out 0.2s infinite alternate;
+    }
+    .vinyl-card:hover .sound-bars span:nth-child(3) {
+      animation: eqPulse 0.9s ease-in-out 0.1s infinite alternate;
+    }
+
+    @keyframes eqPulse {
+      from { height: 3px; }
+      to { height: 11px; }
+    }
+
+    /* 字段：日期 */
+    .card-date {
+      font-family: "SF Mono", "JetBrains Mono", Menlo, monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      color: var(--tea-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* 字段：留言内容 */
+    .card-body {
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      margin-bottom: 22px;
+    }
+
+    .card-message {
+      font-size: 14.25px;
+      line-height: 1.76;
+      color: var(--text-body);
+      font-weight: 400;
+      letter-spacing: 0.015em;
+      word-break: break-word;
+    }
+
+    /* 底部落款区：名称 + IP属地 */
+    .card-footer {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* 字段：名称 */
+    .author-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .author-avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, rgba(82, 183, 136, 0.25), rgba(45, 106, 79, 0.15));
+      border: 1px solid rgba(149, 213, 178, 0.28);
+      color: var(--tea-bright);
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .author-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: -0.01em;
+    }
+
+    /* 字段：IP属地（信号发射塔坐标胶囊） */
+    .ip-signal {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--tea-dim);
+      border: 1px solid rgba(82, 183, 136, 0.18);
+      color: var(--tea-bright);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+
+    .vinyl-card:hover .ip-signal {
+      background: var(--tea-neon);
+      border-color: var(--tea-neon);
+      color: #0b1410;
+      font-weight: 600;
+    }
+
+    .signal-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+  </style>
+</head>
+<body>
+
+  <main class="wall-grid">
+
+    <!-- 卡片 1 -->
+    <article class="vinyl-card">
+      <div class="vinyl-disc" aria-hidden="true"></div>
+      <div class="card-top">
+        <div class="sound-bars" aria-hidden="true"><span></span><span></span><span></span></div>
+        <time class="card-date">2026.11.17</time>
+      </div>
+      <div class="card-body">
+        <p class="card-message">
+          好的设计像深夜里的一首爵士乐，不喧哗却有极强的包裹感。每次打开这里，都能听到思考沉淀的声音。
+        </p>
+      </div>
+      <footer class="card-footer">
+        <div class="author-wrap">
+          <span class="author-avatar">林</span>
+          <span class="author-name">林深见鹿</span>
+        </div>
+        <span class="ip-signal"><span class="signal-dot"></span>东京</span>
+      </footer>
+    </article>
+
+    <!-- 卡片 2 -->
+    <article class="vinyl-card">
+      <div class="vinyl-disc" aria-hidden="true"></div>
+      <div class="card-top">
+        <div class="sound-bars" aria-hidden="true"><span></span><span></span><span></span></div>
+        <time class="card-date">2026.11.15</time>
+      </div>
+      <div class="card-body">
+        <p class="card-message">
+          顺着效率工具的文章一路摸过来，主理人对极简美学的执念已经渗透到每个像素里了，暗色茶绿太高级了！
+        </p>
+      </div>
+      <footer class="card-footer">
+        <div class="author-wrap">
+          <span class="author-avatar">周</span>
+          <span class="author-name">周屿白</span>
+        </div>
+        <span class="ip-signal"><span class="signal-dot"></span>上海</span>
+      </footer>
+    </article>
+
+    <!-- 卡片 3 -->
+    <article class="vinyl-card">
+      <div class="vinyl-disc" aria-hidden="true"></div>
+      <div class="card-top">
+        <div class="sound-bars" aria-hidden="true"><span></span><span></span><span></span></div>
+        <time class="card-date">2026.11.12</time>
+      </div>
+      <div class="card-body">
+        <p class="card-message">
+          在这个追求快节奏的时代，能静下心打磨细节的人越来越少。愿你永远保持这份对秩序与美感的敏锐。
+        </p>
+      </div>
+      <footer class="card-footer">
+        <div class="author-wrap">
+          <span class="author-avatar">E</span>
+          <span class="author-name">Elena Vance</span>
+        </div>
+        <span class="ip-signal"><span class="signal-dot"></span>伦敦</span>
+      </footer>
+    </article>
+
+    <!-- 卡片 4 -->
+    <article class="vinyl-card">
+      <div class="vinyl-disc" aria-hidden="true"></div>
+      <div class="card-top">
+        <div class="sound-bars" aria-hidden="true"><span></span><span></span><span></span></div>
+        <time class="card-date">2026.11.09</time>
+      </div>
+      <div class="card-body">
+        <p class="card-message">
+          刚刚用你推荐的工作流跑通了本地自动化，每天省下半小时机械操作，特地上来留个坐标表示感谢！
+        </p>
+      </div>
+      <footer class="card-footer">
+        <div class="author-wrap">
+          <span class="author-avatar">陈</span>
+          <span class="author-name">陈默然</span>
+        </div>
+        <span class="ip-signal"><span class="signal-dot"></span>杭州</span>
+      </footer>
+    </article>
+
+    <!-- 卡片 5 -->
+    <article class="vinyl-card">
+      <div class="vinyl-disc" aria-hidden="true"></div>
+      <div class="card-top">
+        <div class="sound-bars" aria-hidden="true"><span></span><span></span><span></span></div>
+        <time class="card-date">2026.11.06</time>
+      </div>
+      <div class="card-body">
+        <p class="card-message">
+          每一条留言都像是一张被封存的黑胶单曲，把不同城市、不同夜晚的共鸣安静地刻录在同频共振里。
+        </p>
+      </div>
+      <footer class="card-footer">
+        <div class="author-wrap">
+          <span class="author-avatar">南</span>
+          <span class="author-name">南风知意</span>
+        </div>
+        <span class="ip-signal"><span class="signal-dot"></span>深圳</span>
+      </footer>
+    </article>
+
+    <!-- 卡片 6 -->
+    <article class="vinyl-card">
+      <div class="vinyl-disc" aria-hidden="true"></div>
+      <div class="card-top">
+        <div class="sound-bars" aria-hidden="true"><span></span><span></span><span></span></div>
+        <time class="card-date">2026.11.03</time>
+      </div>
+      <div class="card-body">
+        <p class="card-message">
+          不喧哗，自有声。期待看到更多关于产品思考与独立开发的深度拆解，已设为浏览器首页常驻。
+        </p>
+      </div>
+      <footer class="card-footer">
+        <div class="author-wrap">
+          <span class="author-avatar">K</span>
+          <span class="author-name">Kaito_M</span>
+        </div>
+        <span class="ip-signal"><span class="signal-dot"></span>京都</span>
+      </footer>
+    </article>
+
+    <!-- 卡片 7 -->
+    <article class="vinyl-card">
+      <div class="vinyl-disc" aria-hidden="true"></div>
+      <div class="card-top">
+        <div class="sound-bars" aria-hidden="true"><span></span><span></span><span></span></div>
+        <time class="card-date">2026.10.29</time>
+      </div>
+      <div class="card-body">
+        <p class="card-message">
+          从你的视频一路追到个人网站，内容输出一如既往地克制且干货满满，希望能一直看到你的分享。
+        </p>
+      </div>
+      <footer class="card-footer">
+        <div class="author-wrap">
+          <span class="author-avatar">苏</span>
+          <span class="author-name">苏白</span>
+        </div>
+        <span class="ip-signal"><span class="signal-dot"></span>成都</span>
+      </footer>
+    </article>
+
+    <!-- 卡片 8 -->
+    <article class="vinyl-card">
+      <div class="vinyl-disc" aria-hidden="true"></div>
+      <div class="card-top">
+        <div class="sound-bars" aria-hidden="true"><span></span><span></span><span></span></div>
+        <time class="card-date">2026.10.24</time>
+      </div>
+      <div class="card-body">
+        <p class="card-message">
+          极简不是什么都没有，而是把多余的噪音剔除后，让真正有价值的文字自己发光。
+        </p>
+      </div>
+      <footer class="card-footer">
+        <div class="author-wrap">
+          <span class="author-avatar">温</span>
+          <span class="author-name">温言</span>
+        </div>
+        <span class="ip-signal"><span class="signal-dot"></span>北京</span>
+      </footer>
+    </article>
+
+  </main>
+
+  <script>
+    document.querySelectorAll('.vinyl-card').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty('--mx', `${e.clientX - rect.left}px`);
+        card.style.setProperty('--my', `${e.clientY - rect.top}px`);
+      });
+    });
+  </script>
+
+</body>
+</html>

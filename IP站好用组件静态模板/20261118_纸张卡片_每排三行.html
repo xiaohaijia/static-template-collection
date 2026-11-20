@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>「时间胶囊 · 晶体折纸」高阶极简留言墙</title>
+  <style>
+    :root {
+      --bg-canvas: #eef1ed;
+      --surface-base: #fbfcfa;
+      --tea-deep: #182b24;
+      --tea-core: #2f6350;
+      --tea-light: #6a9987;
+      --tea-mist: #e4ede9;
+      --text-main: #1f2e28;
+      --text-sub: #54665f;
+      --text-faint: #8c9c95;
+      --hairline: rgba(24, 43, 36, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background-color: var(--bg-canvas);
+      /* 极简建筑级光影基底 */
+      background-image: 
+        radial-gradient(circle at 12% 10%, rgba(47, 99, 80, 0.06), transparent 36%),
+        radial-gradient(circle at 88% 85%, rgba(47, 99, 80, 0.05), transparent 40%);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", sans-serif;
+      color: var(--text-main);
+      padding: 56px 36px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 3列建筑比例网格 */
+    .wall-container {
+      max-width: 1220px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 32px;
+    }
+
+    /* =================================================================
+       核心创意：建筑折纸切角（Chamfered Origami）+ 晶体雷达定位环
+       彻底告别千篇一律的圆角矩形框，用右上角 45° 物理折页切角制造雕塑感
+    ================================================================= */
+    .note-prism {
+      --mx: 50%;
+      --my: 50%;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 256px;
+      padding: 30px 30px 26px;
+      background: var(--surface-base);
+      /* 顶部与左侧精细直角，右下微圆角，右上角留出折页切角 */
+      border-radius: 4px 0 20px 4px;
+      /* 切掉右上角 38px，形成纸张折角轮廓 */
+      clip-path: polygon(
+        0 0,
+        calc(100% - 38px) 0,
+        100% 38px,
+        100% 100%,
+        0 100%
+      );
+      box-shadow: 
+        inset 0 0 0 1px var(--hairline),
+        0 18px 38px -18px rgba(24, 43, 36, 0.12);
+      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                  background-color 0.35s ease;
+    }
+
+    /* 鼠标跟随的晶体微光层（极其克制，仅在悬停时浮现） */
+    .note-prism::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        380px circle at var(--mx) var(--my),
+        rgba(47, 99, 80, 0.075),
+        transparent 65%
+      );
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+    }
+
+    /* 右上角真实折纸三角翻页（Paper Fold） */
+    .note-prism::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(225deg, transparent 48%, rgba(24, 43, 36, 0.06) 50%, #e4ebe7 52%, #f4f7f5 100%);
+      border-bottom-left-radius: 6px;
+      box-shadow: -3px 3px 8px rgba(24, 43, 36, 0.06);
+      transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    .note-prism:hover {
+      transform: translateY(-6px);
+      background: #ffffff;
+    }
+
+    .note-prism:hover::before {
+      opacity: 1;
+    }
+
+    /* 悬停时折角微微展开，产生纸张翻动的生命力 */
+    .note-prism:hover::after {
+      width: 44px;
+      height: 44px;
+    }
+
+    /* 顶部栏：日期以「日历经纬度刻度」形式呈现 */
+    .prism-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding-right: 36px; /* 避开右上角折页 */
+    }
+
+    .axis-line {
+      width: 18px;
+      height: 1.5px;
+      background-color: var(--tea-core);
+      transition: width 0.35s ease;
+    }
+
+    .note-prism:hover .axis-line {
+      width: 28px;
+    }
+
+    /* 字段：日期 */
+    .prism-date {
+      font-family: "SF Mono", "JetBrains Mono", Menlo, monospace;
+      font-size: 11.5px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      color: var(--text-faint);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* 字段：留言内容（杂志级排印呼吸感） */
+    .prism-content {
+      position: relative;
+      z-index: 1;
+      font-size: 15.5px;
+      line-height: 1.8;
+      color: var(--text-main);
+      font-weight: 400;
+      letter-spacing: 0.015em;
+      margin-bottom: 28px;
+    }
+
+    /* 底部落款区：左侧签名，右侧空间信标（IP属地） */
+    .prism-footer {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 16px;
+      border-top: 1px solid var(--hairline);
+    }
+
+    /* 字段：名称（破折号落款美学） */
+    .author-signature {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .author-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--text-faint);
+      font-family: "SF Mono", Menlo, monospace;
+    }
+
+    .author-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--tea-deep);
+      letter-spacing: -0.01em;
+    }
+
+    /* 字段：IP属地（同心雷达坐标信标，极简且具科幻/空间感） */
+    .geo-beacon {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 11px 5px 8px;
+      border-radius: 99px;
+      background: var(--tea-mist);
+      color: var(--tea-core);
+      font-size: 11.5px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .note-prism:hover .geo-beacon {
+      background: var(--tea-core);
+      color: #ffffff;
+    }
+
+    /* 动态雷达同心圆 */
+    .radar-ring {
+      position: relative;
+      width: 12px;
+      height: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .radar-ring::before {
+      content: "";
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .radar-ring::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1px solid currentColor;
+      opacity: 0.45;
+      transform: scale(0.85);
+      transition: transform 0.4s ease, opacity 0.4s ease;
+    }
+
+    .note-prism:hover .radar-ring::after {
+      transform: scale(1.25);
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+
+  <section class="wall-container">
+
+    <!-- 卡片 1 -->
+    <article class="note-prism">
+      <div>
+        <div class="prism-top">
+          <span class="axis-line"></span>
+          <time class="prism-date">2026 / 11 / 17</time>
+        </div>
+        <p class="prism-content">
+          好的界面应该像清晨推开窗时的空气——干净、有分寸感，不打扰思考。这里的每一次排版与留白都让人觉得被温柔对待。
+        </p>
+      </div>
+      <footer class="prism-footer">
+        <div class="author-signature">
+          <span class="author-label">FROM</span>
+          <span class="author-name">林深见鹿</span>
+        </div>
+        <div class="geo-beacon">
+          <span class="radar-ring"></span>
+          <span>东京 · JP</span>
+        </div>
+      </footer>
+    </article>
+
+    <!-- 卡片 2 -->
+    <article class="note-prism">
+      <div>
+        <div class="prism-top">
+          <span class="axis-line"></span>
+          <time class="prism-date">2026 / 11 / 14</time>
+        </div>
+        <p class="prism-content">
+          顺着效率工具的文章一路摸过来，发现主理人对极简美学的执念已经渗透到每个像素里了，茶绿色系越看越耐看。
+        </p>
+      </div>
+      <footer class="prism-footer">
+        <div class="author-signature">
+          <span class="author-label">FROM</span>
+          <span class="author-name">周屿白</span>
+        </div>
+        <div class="geo-beacon">
+          <span class="radar-ring"></span>
+          <span>上海 · CN</span>
+        </div>
+      </footer>
+    </article>
+
+    <!-- 卡片 3 -->
+    <article class="note-prism">
+      <div>
+        <div class="prism-top">
+          <span class="axis-line"></span>
+          <time class="prism-date">2026 / 11 / 10</time>
+        </div>
+        <p class="prism-content">
+          在这个追求快节奏的时代，能静下心打磨细节的人越来越少。愿你永远保持这份对秩序与美感的敏锐。
+        </p>
+      </div>
+      <footer class="prism-footer">
+        <div class="author-signature">
+          <span class="author-label">FROM</span>
+          <span class="author-name">Elena Vance</span>
+        </div>
+        <div class="geo-beacon">
+          <span class="radar-ring"></span>
+          <span>伦敦 · UK</span>
+        </div>
+      </footer>
+    </article>
+
+    <!-- 卡片 4 -->
+    <article class="note-prism">
+      <div>
+        <div class="prism-top">
+          <span class="axis-line"></span>
+          <time class="prism-date">2026 / 11 / 06</time>
+        </div>
+        <p class="prism-content">
+          刚刚用你推荐的工作流跑通了本地自动化，省去了每天半小时的机械操作，特地上来留个坐标表示感谢！
+        </p>
+      </div>
+      <footer class="prism-footer">
+        <div class="author-signature">
+          <span class="author-label">FROM</span>
+          <span class="author-name">陈默然</span>
+        </div>
+        <div class="geo-beacon">
+          <span class="radar-ring"></span>
+          <span>杭州 · CN</span>
+        </div>
+      </footer>
+    </article>
+
+    <!-- 卡片 5 -->
+    <article class="note-prism">
+      <div>
+        <div class="prism-top">
+          <span class="axis-line"></span>
+          <time class="prism-date">2026 / 11 / 02</time>
+        </div>
+        <p class="prism-content">
+          每一张卡片都像一枚折叠好的时间胶囊，把不同城市、不同夜晚的共鸣安静地封存在同一片茶绿里。
+        </p>
+      </div>
+      <footer class="prism-footer">
+        <div class="author-signature">
+          <span class="author-label">FROM</span>
+          <span class="author-name">南风知意</span>
+        </div>
+        <div class="geo-beacon">
+          <span class="radar-ring"></span>
+          <span>深圳 · CN</span>
+        </div>
+      </footer>
+    </article>
+
+    <!-- 卡片 6 -->
+    <article class="note-prism">
+      <div>
+        <div class="prism-top">
+          <span class="axis-line"></span>
+          <time class="prism-date">2026 / 10 / 28</time>
+        </div>
+        <p class="prism-content">
+          不喧哗，自有声。期待看到更多关于产品思考与独立开发的深度分享。
+        </p>
+      </div>
+      <footer class="prism-footer">
+        <div class="author-signature">
+          <span class="author-label">FROM</span>
+          <span class="author-name">Kaito_M</span>
+        </div>
+        <div class="geo-beacon">
+          <span class="radar-ring"></span>
+          <span>京都 · JP</span>
+        </div>
+      </footer>
+    </article>
+
+  </section>
+
+  <!-- 极轻量指针光感追踪（仅12行，赋予卡片细腻的物理光泽） -->
+  <script>
+    document.querySelectorAll('.note-prism').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty('--mx', `${e.clientX - rect.left}px`);
+        card.style.setProperty('--my', `${e.clientY - rect.top}px`);
+      });
+    });
+  </script>
+
+</body>
+</html>

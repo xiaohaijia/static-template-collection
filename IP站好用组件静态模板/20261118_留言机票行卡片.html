@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>「机票登机牌 · 跨越山海的信号」极简高阶 4列留言墙</title>
+  <style>
+    :root {
+      --bg-canvas: #f2f4f2;
+      --card-bg: #ffffff;
+      --tea-ink: #13211b;
+      --tea-core: #2c634f;
+      --tea-light: #e5efe9;
+      --tea-muted: #889891;
+      --tea-body: #2c3b35;
+      --line-hairline: rgba(19, 33, 27, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background-color: var(--bg-canvas);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", sans-serif;
+      color: var(--tea-ink);
+      padding: 60px 36px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 4列航空级精密网格 */
+    .flight-wall {
+      max-width: 1420px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 24px;
+    }
+
+    @media (max-width: 1180px) {
+      .flight-wall {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 620px) {
+      .flight-wall {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* =================================================================
+       物品映射：「极简国际航班登机牌（Minimalist Boarding Pass）」
+       概念：每一条来自不同城市的留言，都是一张跨越经纬度抵达你这里的“航班登机牌”。
+       - 顶部航线航段：左侧【IP属地】→ 虚线航迹与微缩飞机 → 右侧【HOST / 站点】
+       - 中部舱位主区：【留言内容】
+       - 底部乘客与航班日期：左侧【名称】 + 右侧【日期】 + 极简条形码纹理装饰
+       零多余复古做旧、零臃肿边框，纯靠现代航空导视系统（如日本无印良品/北欧航空）的精密排版说话。
+    ================================================================= */
+    .boarding-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 256px;
+      background: var(--card-bg);
+      border-radius: 18px;
+      padding: 22px 24px 20px;
+      border: 1px solid var(--line-hairline);
+      box-shadow: 
+        0 1px 2px rgba(19, 33, 27, 0.025),
+        0 14px 32px -14px rgba(19, 33, 27, 0.07);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                  box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                  border-color 0.35s ease;
+    }
+
+    .boarding-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(44, 99, 79, 0.25);
+      box-shadow: 
+        0 4px 10px rgba(19, 33, 27, 0.03),
+        0 22px 42px -12px rgba(44, 99, 79, 0.14);
+    }
+
+    /* =================================================================
+       顶部航线区：IP属地 (出发地) ✈︎ HERE (目的地)
+    ================================================================= */
+    .flight-route {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 16px;
+      border-bottom: 1px dashed var(--line-hairline);
+      margin-bottom: 18px;
+    }
+
+    .port-box {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .port-box.dest {
+      text-align: right;
+    }
+
+    .port-label {
+      font-family: "SF Mono", "JetBrains Mono", Menlo, monospace;
+      font-size: 9.5px;
+      letter-spacing: 0.12em;
+      color: var(--tea-muted);
+      text-transform: uppercase;
+    }
+
+    /* 字段：IP属地（出发城市） */
+    .port-city {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--tea-core);
+      letter-spacing: -0.01em;
+    }
+
+    .port-dest-code {
+      font-family: "SF Mono", "JetBrains Mono", Menlo, monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--tea-ink);
+      letter-spacing: 0.04em;
+    }
+
+    /* 中央航迹轨道 + 悬停滑行飞机 */
+    .flight-track {
+      position: relative;
+      flex: 1;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 4px;
+    }
+
+    .flight-track::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: repeating-linear-gradient(
+        90deg,
+        rgba(44, 99, 79, 0.28) 0 3px,
+        transparent 3px 6px
+      );
+    }
+
+    .plane-icon {
+      position: relative;
+      z-index: 1;
+      width: 14px;
+      height: 14px;
+      color: var(--tea-core);
+      background: var(--card-bg);
+      padding: 0 2px;
+      transform: translateX(-6px);
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .boarding-card:hover .plane-icon {
+      transform: translateX(6px);
+    }
+
+    /* =================================================================
+       中部核心：留言内容
+    ================================================================= */
+    .flight-message {
+      flex: 1;
+      font-size: 14px;
+      line-height: 1.76;
+      color: var(--tea-body);
+      font-weight: 400;
+      letter-spacing: 0.012em;
+      margin-bottom: 20px;
+      word-break: break-word;
+    }
+
+    /* =================================================================
+       底部存根区：乘客名称 + 航班日期 + 极简登机条码
+    ================================================================= */
+    .flight-stub {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line-hairline);
+    }
+
+    .meta-col {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .meta-caption {
+      font-family: "SF Mono", "JetBrains Mono", Menlo, monospace;
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      color: var(--tea-muted);
+      text-transform: uppercase;
+    }
+
+    /* 字段：名称 */
+    .passenger-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--tea-ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* 字段：日期 */
+    .flight-date {
+      font-family: "SF Mono", "JetBrains Mono", Menlo, monospace;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--tea-body);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.03em;
+    }
+
+    /* 纯 CSS 精密登机牌微缩条码（仅 16px 高，克制点缀） */
+    .mini-barcode {
+      width: 34px;
+      height: 18px;
+      flex-shrink: 0;
+      opacity: 0.25;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--tea-ink) 0 1.5px,
+        transparent 1.5px 3.5px,
+        var(--tea-ink) 3.5px 4.5px,
+        transparent 4.5px 7px,
+        var(--tea-ink) 7px 9px,
+        transparent 9px 11px
+      );
+      transition: opacity 0.35s ease;
+    }
+
+    .boarding-card:hover .mini-barcode {
+      opacity: 0.55;
+    }
+  </style>
+</head>
+<body>
+
+  <main class="flight-wall">
+
+    <!-- 卡片 1 -->
+    <article class="boarding-card">
+      <header class="flight-route">
+        <div class="port-box">
+          <span class="port-label">ORIGIN</span>
+          <span class="port-city">东京</span>
+        </div>
+        <div class="flight-track" aria-hidden="true">
+          <svg class="plane-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" transform="rotate(90 12 12)"/>
+          </svg>
+        </div>
+        <div class="port-box dest">
+          <span class="port-label">ARRIVAL</span>
+          <span class="port-dest-code">NOTE</span>
+        </div>
+      </header>
+
+      <p class="flight-message">
+        好的界面像清晨推开窗时的空气，干净、有分寸感，不打扰思考。这里的留白让人觉得被温柔对待。
+      </p>
+
+      <footer class="flight-stub">
+        <div class="meta-col">
+          <span class="meta-caption">PASSENGER</span>
+          <span class="passenger-name">林深见鹿</span>
+        </div>
+        <div class="meta-col">
+          <span class="meta-caption">DATE</span>
+          <time class="flight-date">2026.11.17</time>
+        </div>
+        <div class="mini-barcode" aria-hidden="true"></div>
+      </footer>
+    </article>
+
+    <!-- 卡片 2 -->
+    <article class="boarding-card">
+      <header class="flight-route">
+        <div class="port-box">
+          <span class="port-label">ORIGIN</span>
+          <span class="port-city">上海</span>
+        </div>
+        <div class="flight-track" aria-hidden="true">
+          <svg class="plane-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" transform="rotate(90 12 12)"/>
+          </svg>
+        </div>
+        <div class="port-box dest">
+          <span class="port-label">ARRIVAL</span>
+          <span class="port-dest-code">NOTE</span>
+        </div>
+      </header>
+
+      <p class="flight-message">
+        顺着效率工具的文章一路摸过来，主理人对极简美学的执念已经渗透到每个像素里了，茶绿越看越耐看。
+      </p>
+
+      <footer class="flight-stub">
+        <div class="meta-col">
+          <span class="meta-caption">PASSENGER</span>
+          <span class="passenger-name">周屿白</span>
+        </div>
+        <div class="meta-col">
+          <span class="meta-caption">DATE</span>
+          <time class="flight-date">2026.11.15</time>
+        </div>
+        <div class="mini-barcode" aria-hidden="true"></div>
+      </footer>
+    </article>
+
+    <!-- 卡片 3 -->
+    <article class="boarding-card">
+      <header class="flight-route">
+        <div class="port-box">
+          <span class="port-label">ORIGIN</span>
+          <span class="port-city">伦敦</span>
+        </div>
+        <div class="flight-track" aria-hidden="true">
+          <svg class="plane-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" transform="rotate(90 12 12)"/>
+          </svg>
+        </div>
+        <div class="port-box dest">
+          <span class="port-label">ARRIVAL</span>
+          <span class="port-dest-code">NOTE</span>
+        </div>
+      </header>
+
+      <p class="flight-message">
+        在这个追求快节奏的时代，能静下心打磨细节的人越来越少。愿你永远保持这份对秩序与美感的敏锐。
+      </p>
+
+      <footer class="flight-stub">
+        <div class="meta-col">
+          <span class="meta-caption">PASSENGER</span>
+          <span class="passenger-name">Elena Vance</span>
+        </div>
+        <div class="meta-col">
+          <span class="meta-caption">DATE</span>
+          <time class="flight-date">2026.11.12</time>
+        </div>
+        <div class="mini-barcode" aria-hidden="true"></div>
+      </footer>
+    </article>
+
+    <!-- 卡片 4 -->
+    <article class="boarding-card">
+      <header class="flight-route">
+        <div class="port-box">
+          <span class="port-label">ORIGIN</span>
+          <span class="port-city">杭州</span>
+        </div>
+        <div class="flight-track" aria-hidden="true">
+          <svg class="plane-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" transform="rotate(90 12 12)"/>
+          </svg>
+        </div>
+        <div class="port-box dest">
+          <span class="port-label">ARRIVAL</span>
+          <span class="port-dest-code">NOTE</span>
+        </div>
+      </header>
+
+      <p class="flight-message">
+        刚刚用你推荐的工作流跑通了本地自动化，每天省下半小时机械操作，特地上来留个坐标表示感谢！
+      </p>
+
+      <footer class="flight-stub">
+        <div class="meta-col">
+          <span class="meta-caption">PASSENGER</span>
+          <span class="passenger-name">陈默然</span>
+        </div>
+        <div class="meta-col">
+          <span class="meta-caption">DATE</span>
+          <time class="flight-date">2026.11.09</time>
+        </div>
+        <div class="mini-barcode" aria-hidden="true"></div>
+      </footer>
+    </article>
+
+    <!-- 卡片 5 -->
+    <article class="boarding-card">
+      <header class="flight-route">
+        <div class="port-box">
+          <span class="port-label">ORIGIN</span>
+          <span class="port-city">深圳</span>
+        </div>
+        <div class="flight-track" aria-hidden="true">
+          <svg class="plane-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" transform="rotate(90 12 12)"/>
+          </svg>
+        </div>
+        <div class="port-box dest">
+          <span class="port-label">ARRIVAL</span>
+          <span class="port-dest-code">NOTE</span>
+        </div>
+      </header>
+
+      <p class="flight-message">
+        删繁就简三秋树，真正高阶的审美从来不需要多余的装饰物去证明自己，留白本身就是力量。
+      </p>
+
+      <footer class="flight-stub">
+        <div class="meta-col">
+          <span class="meta-caption">PASSENGER</span>
+          <span class="passenger-name">南风知意</span>
+        </div>
+        <div class="meta-col">
+          <span class="meta-caption">DATE</span>
+          <time class="flight-date">2026.11.06</time>
+        </div>
+        <div class="mini-barcode" aria-hidden="true"></div>
+      </footer>
+    </article>
+
+    <!-- 卡片 6 -->
+    <article class="boarding-card">
+      <header class="flight-route">
+        <div class="port-box">
+          <span class="port-label">ORIGIN</span>
+          <span class="port-city">京都</span>
+        </div>
+        <div class="flight-track" aria-hidden="true">
+          <svg class="plane-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" transform="rotate(90 12 12)"/>
+          </svg>
+        </div>
+        <div class="port-box dest">
+          <span class="port-label">ARRIVAL</span>
+          <span class="port-dest-code">NOTE</span>
+        </div>
+      </header>
+
+      <p class="flight-message">
+        不喧哗，自有声。期待看到更多关于产品思考与独立开发的深度拆解，已设为浏览器首页常驻。
+      </p>
+
+      <footer class="flight-stub">
+        <div class="meta-col">
+          <span class="meta-caption">PASSENGER</span>
+          <span class="passenger-name">Kaito_M</span>
+        </div>
+        <div class="meta-col">
+          <span class="meta-caption">DATE</span>
+          <time class="flight-date">2026.11.03</time>
+        </div>
+        <div class="mini-barcode" aria-hidden="true"></div>
+      </footer>
+    </article>
+
+    <!-- 卡片 7 -->
+    <article class="boarding-card">
+      <header class="flight-route">
+        <div class="port-box">
+          <span class="port-label">ORIGIN</span>
+          <span class="port-city">成都</span>
+        </div>
+        <div class="flight-track" aria-hidden="true">
+          <svg class="plane-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" transform="rotate(90 12 12)"/>
+          </svg>
+        </div>
+        <div class="port-box dest">
+          <span class="port-label">ARRIVAL</span>
+          <span class="port-dest-code">NOTE</span>
+        </div>
+      </header>
+
+      <p class="flight-message">
+        从你的视频一路追到个人网站，内容输出一如既往地克制且干货满满，希望能一直看到你的分享。
+      </p>
+
+      <footer class="flight-stub">
+        <div class="meta-col">
+          <span class="meta-caption">PASSENGER</span>
+          <span class="passenger-name">苏白</span>
+        </div>
+        <div class="meta-col">
+          <span class="meta-caption">DATE</span>
+          <time class="flight-date">2026.10.29</time>
+        </div>
+        <div class="mini-barcode" aria-hidden="true"></div>
+      </footer>
+    </article>
+
+    <!-- 卡片 8 -->
+    <article class="boarding-card">
+      <header class="flight-route">
+        <div class="port-box">
+          <span class="port-label">ORIGIN</span>
+          <span class="port-city">北京</span>
+        </div>
+        <div class="flight-track" aria-hidden="true">
+          <svg class="plane-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" transform="rotate(90 12 12)"/>
+          </svg>
+        </div>
+        <div class="port-box dest">
+          <span class="port-label">ARRIVAL</span>
+          <span class="port-dest-code">NOTE</span>
+        </div>
+      </header>
+
+      <p class="flight-message">
+        极简不是什么都没有，而是把多余的噪音剔除后，让真正有价值的文字自己发光。
+      </p>
+
+      <footer class="flight-stub">
+        <div class="meta-col">
+          <span class="meta-caption">PASSENGER</span>
+          <span class="passenger-name">温言</span>
+        </div>
+        <div class="meta-col">
+          <span class="meta-caption">DATE</span>
+          <time class="flight-date">2026.10.24</time>
+        </div>
+        <div class="mini-barcode" aria-hidden="true"></div>
+      </footer>
+    </article>
+
+  </main>
+
+</body>
+</html>

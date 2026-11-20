@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>实体档案票据风 · 极简悬浮触发器与多分类双排展柜</title>
+  <style>
+    :root {
+      --bg-canvas: #ecefe9;
+      --paper-bg: #fcfdfa;
+      --paper-stub: #f4f7f2;
+      --tea-dark: #1d322b;
+      --tea-primary: #3b6e5c;
+      --tea-muted: #7b8c85;
+      --tea-tint: rgba(59, 110, 92, 0.08);
+      --border-hairline: rgba(29, 50, 43, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background-color: var(--bg-canvas);
+      background-image: radial-gradient(rgba(29, 50, 43, 0.12) 1px, transparent 1px);
+      background-size: 20px 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", sans-serif;
+      color: var(--tea-dark);
+      padding: 40px 0;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* =================================================================
+       横向展台视口：上下严格对齐 2 行 × 4 列
+    ================================================================= */
+    .stage-viewport {
+      position: relative;
+      width: 100%;
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 16px 40px 24px;
+      overflow: hidden;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .stage-viewport:active {
+      cursor: grabbing;
+    }
+
+    .dual-rows-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .stage-row {
+      display: flex;
+      gap: 24px;
+      will-change: transform;
+      align-items: stretch;
+    }
+
+    /* =================================================================
+       实体档案票据卡片
+    ================================================================= */
+    .ticket-card {
+      --mx: 50%;
+      --my: 50%;
+      flex: 0 0 calc((100% - 72px) / 4);
+      min-width: 260px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: var(--paper-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border-hairline);
+      box-shadow: 
+        0 2px 6px rgba(29, 50, 43, 0.03),
+        0 14px 28px -10px rgba(29, 50, 43, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                  box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                  border-color 0.35s ease,
+                  background-color 0.35s ease;
+      overflow: hidden;
+    }
+
+    .ticket-card.newly-issued {
+      animation: cardSlideDrop 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+      border-color: rgba(59, 110, 92, 0.45);
+    }
+
+    @keyframes cardSlideDrop {
+      0% { opacity: 0; transform: translateY(-24px) scale(0.95); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @media (max-width: 1180px) {
+      .ticket-card { flex: 0 0 calc((100% - 24px) / 2); }
+    }
+
+    @media (max-width: 640px) {
+      .ticket-card { flex: 0 0 85%; }
+    }
+
+    .ticket-card:hover {
+      transform: translateY(-6px);
+      background: #ffffff;
+      border-color: rgba(59, 110, 92, 0.32);
+      box-shadow: 
+        0 6px 14px rgba(29, 50, 43, 0.04),
+        0 24px 44px -12px rgba(59, 110, 92, 0.16),
+        inset 0 1px 0 #ffffff;
+    }
+
+    .ticket-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        260px circle at var(--mx) var(--my),
+        rgba(59, 110, 92, 0.055),
+        transparent 70%
+      );
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .ticket-card:hover::after { opacity: 1; }
+
+    .ticket-main {
+      padding: 22px 22px 18px;
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ticket-meta-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      font-family: "SF Mono", "JetBrains Mono", Menlo, monospace;
+      font-size: 11px;
+      color: var(--tea-muted);
+      letter-spacing: 0.06em;
+    }
+
+    .serial-no {
+      color: var(--tea-primary);
+      font-weight: 600;
+      background: var(--tea-tint);
+      padding: 2px 7px;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+
+    .ticket-card:hover .serial-no { background: rgba(59, 110, 92, 0.14); }
+
+    .ticket-date {
+      font-variant-numeric: tabular-nums;
+      transition: color 0.3s ease;
+    }
+
+    .ticket-card:hover .ticket-date { color: var(--tea-primary); }
+
+    .ticket-message {
+      font-size: 14px;
+      line-height: 1.74;
+      color: #263832;
+      font-weight: 400;
+      letter-spacing: 0.01em;
+      min-height: 74px;
+      word-break: break-word;
+    }
+
+    .ticket-perforation {
+      position: relative;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      background: linear-gradient(to bottom, var(--paper-bg) 50%, var(--paper-stub) 50%);
+      transition: background 0.35s ease;
+    }
+
+    .ticket-card:hover .ticket-perforation {
+      background: linear-gradient(to bottom, #ffffff 50%, var(--paper-stub) 50%);
+    }
+
+    .ticket-perforation::before,
+    .ticket-perforation::after {
+      content: "";
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background-color: var(--bg-canvas);
+      border: 1px solid var(--border-hairline);
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 2;
+      transition: border-color 0.35s ease;
+    }
+
+    .ticket-card:hover .ticket-perforation::before,
+    .ticket-card:hover .ticket-perforation::after {
+      border-color: rgba(59, 110, 92, 0.28);
+    }
+
+    .ticket-perforation::before { left: -8px; }
+    .ticket-perforation::after { right: -8px; }
+
+    .perforation-line {
+      width: 100%;
+      margin: 0 14px;
+      border-top: 1px dashed rgba(29, 50, 43, 0.16);
+      transition: border-color 0.35s ease;
+    }
+
+    .ticket-card:hover .perforation-line { border-color: rgba(59, 110, 92, 0.32); }
+
+    .ticket-stub {
+      background-color: var(--paper-stub);
+      padding: 12px 22px 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .author-wrap {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+
+    .author-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 2px;
+      background-color: var(--tea-primary);
+      transform: rotate(45deg);
+      flex-shrink: 0;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .ticket-card:hover .author-dot { transform: rotate(135deg); }
+
+    .author-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--tea-dark);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ip-postmark {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2.5px 8px;
+      border: 1px solid rgba(59, 110, 92, 0.35);
+      border-radius: 4px;
+      color: var(--tea-primary);
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      background: rgba(255, 255, 255, 0.65);
+      transform: rotate(-1.5deg);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  background-color 0.3s ease,
+                  color 0.3s ease,
+                  border-color 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    .ticket-card:hover .ip-postmark {
+      transform: rotate(0deg);
+      background-color: var(--tea-primary);
+      border-color: var(--tea-primary);
+      color: #ffffff;
+    }
+
+    .ip-postmark svg {
+      width: 10.5px;
+      height: 10.5px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    /* =================================================================
+       底部极简分页与双向滑轨控制器
+    ================================================================= */
+    .stage-footer {
+      max-width: 1380px;
+      width: 100%;
+      margin: 14px auto 0;
+      padding: 0 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .page-dots {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .page-pill {
+      height: 6px;
+      width: 20px;
+      border-radius: 99px;
+      border: none;
+      background: rgba(29, 50, 43, 0.14);
+      cursor: pointer;
+      transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .page-pill.active {
+      width: 44px;
+      background: var(--tea-primary);
+    }
+
+    .nav-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-right: 68px;
+    }
+
+    .nav-hint {
+      font-family: "SF Mono", "JetBrains Mono", Menlo, monospace;
+      font-size: 10.5px;
+      color: var(--tea-muted);
+      letter-spacing: 0.08em;
+      margin-right: 6px;
+    }
+
+    .nav-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid var(--border-hairline);
+      background: var(--paper-bg);
+      color: var(--tea-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .nav-btn:hover {
+      border-color: var(--tea-primary);
+      color: var(--tea-primary);
+      background: #ffffff;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px -4px rgba(29, 50, 43, 0.1);
+    }
+
+    /* =================================================================
+       精修：极简微缩几何悬浮触发器（46px 磨砂玻璃印章钮）
+       摒弃臃肿厚重圆盘，采用 46px 轻盈纸白磨砂圆钮 + 1px 极细边框 + 16px 极细线条钢笔
+    ================================================================= */
+    .minimal-fab {
+      position: fixed;
+      right: 36px;
+      bottom: 34px;
+      z-index: 120;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: 1px solid rgba(29, 50, 43, 0.14);
+      background: rgba(252, 253, 250, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      color: var(--tea-dark);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 
+        0 8px 20px -6px rgba(29, 50, 43, 0.12),
+        0 2px 4px rgba(29, 50, 43, 0.04),
+        inset 0 1px 0 #ffffff;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  border-color 0.3s ease,
+                  background-color 0.3s ease,
+                  color 0.3s ease,
+                  box-shadow 0.35s ease;
+    }
+
+    .minimal-fab:hover {
+      transform: translateY(-3px);
+      background: #ffffff;
+      border-color: var(--tea-primary);
+      color: var(--tea-primary);
+      box-shadow: 
+        0 14px 28px -6px rgba(59, 110, 92, 0.2),
+        0 4px 8px rgba(29, 50, 43, 0.04);
+    }
+
+    .minimal-fab:active {
+      transform: scale(0.94);
+    }
+
+    .minimal-fab.is-active {
+      background: var(--tea-dark);
+      border-color: var(--tea-dark);
+      color: #fcfdfa;
+      transform: rotate(90deg);
+    }
+
+    .fab-icon-pen,
+    .fab-icon-close {
+      position: absolute;
+      transition: opacity 0.25s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .fab-icon-pen {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .fab-icon-close {
+      opacity: 0;
+      transform: scale(0.6) rotate(-90deg);
+    }
+
+    .minimal-fab.is-active .fab-icon-pen {
+      opacity: 0;
+      transform: scale(0.6) rotate(90deg);
+    }
+
+    .minimal-fab.is-active .fab-icon-close {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+
+    /* =================================================================
+       毛玻璃遮罩 + 从右下角极简触发器上方展开的「待签发实体档案票据」
+    ================================================================= */
+    .composer-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 110;
+      background: rgba(236, 239, 233, 0.56);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+
+    .composer-backdrop.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .composer-ticket {
+      position: fixed;
+      right: 36px;
+      bottom: 94px;
+      z-index: 115;
+      width: calc(100vw - 72px);
+      max-width: 440px;
+      background: var(--paper-bg);
+      border-radius: 18px;
+      border: 1px solid rgba(59, 110, 92, 0.28);
+      box-shadow: 
+        0 10px 28px rgba(29, 50, 43, 0.08),
+        0 34px 68px -16px rgba(29, 50, 43, 0.22),
+        inset 0 1px 0 #ffffff;
+      overflow: hidden;
+      transform-origin: bottom right;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(14px) scale(0.92);
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .composer-ticket.is-open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
+
+    .composer-main {
+      padding: 22px 24px 16px;
+      background: #ffffff;
+    }
+
+    .composer-meta-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      font-family: "SF Mono", "JetBrains Mono", Menlo, monospace;
+      font-size: 11px;
+      color: var(--tea-muted);
+      letter-spacing: 0.06em;
+    }
+
+    .serial-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--tea-primary);
+      font-weight: 600;
+      background: var(--tea-tint);
+      padding: 3px 8px;
+      border-radius: 5px;
+    }
+
+    .pulse-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background-color: var(--tea-primary);
+      animation: breathe 2s ease-in-out infinite;
+    }
+
+    @keyframes breathe {
+      0%, 100% { opacity: 0.35; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.25); }
+    }
+
+    .meta-right-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* 字段 1：留言框 */
+    .message-textarea {
+      width: 100%;
+      min-height: 104px;
+      border: none;
+      outline: none;
+      resize: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 14.25px;
+      line-height: 1.76;
+      color: var(--tea-dark);
+      letter-spacing: 0.015em;
+    }
+
+    .message-textarea::placeholder {
+      color: #9aa8a2;
+    }
+
+    /* 票据撕裂虚线与半圆缺口 */
+    .modal-perforation {
+      position: relative;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      background: linear-gradient(to bottom, #ffffff 50%, var(--paper-stub) 50%);
+    }
+
+    .modal-perforation::before,
+    .modal-perforation::after {
+      content: "";
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background-color: #e4e8e2;
+      border: 1px solid rgba(59, 110, 92, 0.24);
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 3;
+    }
+
+    .modal-perforation::before { left: -9px; }
+    .modal-perforation::after { right: -9px; }
+
+    .modal-perforation .perforation-line {
+      width: 100%;
+      margin: 0 16px;
+      border-top: 1px dashed rgba(59, 110, 92, 0.26);
+    }
+
+    /* =================================================================
+       副券存根：多分类矩阵排列（4列 × 2行 = 8个分类） + 底部签发提交栏
+    ================================================================= */
+    .composer-stub {
+      background-color: var(--paper-stub);
+      padding: 14px 24px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .stub-section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: "SF Mono", "JetBrains Mono", Menlo, monospace;
+      font-size: 10px;
+      color: var(--tea-muted);
+      letter-spacing: 0.1em;
+    }
+
+    /* 精密 4 列等宽矩阵排布，再多分类也整齐高级 */
+    .category-matrix {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .cat-stamp {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      height: 30px;
+      padding: 0 8px;
+      border-radius: 6px;
+      border: 1px dashed rgba(59, 110, 92, 0.34);
+      background: rgba(255, 255, 255, 0.65);
+      color: var(--tea-muted);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    .cat-stamp:hover {
+      border-style: solid;
+      border-color: rgba(59, 110, 92, 0.55);
+      color: var(--tea-dark);
+      background: #ffffff;
+    }
+
+    .cat-stamp.active {
+      border-style: solid;
+      border-color: var(--tea-primary);
+      background: var(--tea-primary);
+      color: #ffffff;
+      font-weight: 600;
+      box-shadow: 0 4px 10px -2px rgba(59, 110, 92, 0.28);
+    }
+
+    .stamp-diamond {
+      width: 4.5px;
+      height: 4.5px;
+      background: currentColor;
+      transform: rotate(45deg);
+      opacity: 0.8;
+      flex-shrink: 0;
+    }
+
+    .stub-action-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 10px;
+      border-top: 1px solid rgba(29, 50, 43, 0.06);
+    }
+
+    .selected-hint {
+      font-size: 11.5px;
+      color: var(--tea-muted);
+    }
+
+    .selected-hint strong {
+      color: var(--tea-primary);
+      font-weight: 600;
+    }
+
+    .issue-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 16px;
+      border-radius: 8px;
+      border: none;
+      background: var(--tea-dark);
+      color: #fcfdfa;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .issue-btn:hover:not(:disabled) {
+      background: var(--tea-primary);
+      transform: translateY(-1.5px);
+      box-shadow: 0 8px 18px -6px rgba(59, 110, 92, 0.45);
+    }
+
+    .issue-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .issue-btn svg {
+      width: 12px;
+      height: 12px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 双排对称双向视差展台 -->
+  <section class="stage-viewport" id="viewport">
+    <div class="dual-rows-wrapper">
+
+      <!-- 第一排 -->
+      <div class="stage-row" id="row-top">
+        <article class="ticket-card">
+          <div class="ticket-main">
+            <div class="ticket-meta-top">
+              <span class="serial-no">NO.042</span>
+              <time class="ticket-date">2026.11.17</time>
+            </div>
+            <p class="ticket-message">
+              在这个信息过载的时代，还能看到如此克制、干净又有审美坚持的角落太难得了。茶绿色的视觉呼吸感极佳，已加入常读列表。
+            </p>
+          </div>
+          <div class="ticket-perforation"><div class="perforation-line"></div></div>
+          <footer class="ticket-stub">
+            <div class="author-wrap">
+              <span class="author-dot"></span>
+              <span class="author-name">陈屿森</span>
+            </div>
+            <div class="ip-postmark">
+              <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+              <span>日本 · 东京</span>
+            </div>
+          </footer>
+        </article>
+
+        <article class="ticket-card">
+          <div class="ticket-main">
+            <div class="ticket-meta-top">
+              <span class="serial-no">NO.041</span>
+              <time class="ticket-date">2026.11.15</time>
+            </div>
+            <p class="ticket-message">
+              跟着你分享的工作流思路重构了我的本地效率工具栈，省下了大量重复劳动的时间，真正的“少即是多”。
+            </p>
+          </div>
+          <div class="ticket-perforation"><div class="perforation-line"></div></div>
+          <footer class="ticket-stub">
+            <div class="author-wrap">
+              <span class="author-dot"></span>
+              <span class="author-name">Kira_Design</span>
+            </div>
+            <div class="ip-postmark">
+              <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+              <span>中国 · 上海</span>
+            </div>
+          </footer>
+        </article>
+
+        <article class="ticket-card">
+          <div class="ticket-main">
+            <div class="ticket-meta-top">
+              <span class="serial-no">NO.040</span>
+              <time class="ticket-date">2026.11.12</time>
+            </div>
+            <p class="ticket-message">
+              好的设计不需要喧哗，就像一张质地考究的明信片，字句落下去的时候自然就有了分量。祝创作长青！
+            </p>
+          </div>
+          <div class="ticket-perforation"><div class="perforation-line"></div></div>
+          <footer class="ticket-stub">
+            <div class="author-wrap">
+              <span class="author-dot"></span>
+              <span class="author-name">夏目与风</span>
+            </div>
+            <div class="ip-postmark">
+              <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+              <span>中国 · 杭州</span>
+            </div>
+          </footer>
+        </article>
+
+        <article class="ticket-card">
+          <div class="ticket-main">
+            <div class="ticket-meta-top">
+              <span class="serial-no">NO.039</span>
+              <time class="ticket-date">2026.11.09</time>
+            </div>
+            <p class="ticket-message">
+              深夜偶然点进来，把最近几篇长文一口气读完了。视角非常通透，没有贩卖焦虑，只有实打实的思考沉淀。
+            </p>
+          </div>
+          <div class="ticket-perforation"><div class="perforation-line"></div></div>
+          <footer class="ticket-stub">
+            <div class="author-wrap">
+              <span class="author-dot"></span>
+              <span class="author-name">山海皆可平</span>
+            </div>
+            <div class="ip-postmark">
+              <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+              <span>中国 · 深圳</span>
+            </div>
+          </footer>
+        </article>
+
+        <article class="ticket-card">
+          <div class="ticket-main">
+            <div class="ticket-meta-top">
+              <span class="serial-no">NO.038</span>
+              <time class="ticket-date">2026.11.04</time>
+            </div>
+            <p class="ticket-message">
+              路过留个脚印，期待下一期关于极简桌面与效率系统的深度拆解！
+            </p>
+          </div>
+          <div class="ticket-perforation"><div class="perforation-line"></div></div>
+          <footer class="ticket-stub">
+            <div class="author-wrap">
+              <span class="author-dot"></span>
+              <span class="author-name">阿泽同学</span>
+            </div>
+            <div class="ip-postmark">
+              <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+              <span>英国 · 伦敦</span>
+            </div>
+          </footer>
+        </article>
+
+        <article class="ticket-card">
+          <div class="ticket-main">
+            <div class="ticket-meta-top">
+              <span class="serial-no">NO.037</span>
+              <time class="ticket-date">2026.10.29</time>
+            </div>
+            <p class="ticket-message">
+              非常喜欢这种像实体票根一样的留言质感，每一条留言都像是从远方寄来的一张小卡片，被认真收藏了起来。
+            </p>
+          </div>
+          <div class="ticket-perforation"><div class="perforation-line"></div></div>
+          <footer class="ticket-stub">
+            <div class="author-wrap">
+              <span class="author-dot"></span>
+              <span class="author-name">苏白</span>
+            </div>
+            <div class="ip-postmark">
+              <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+              <span>中国 · 成都</span>
+            </div>
+          </footer>
+        </article>
+
+        <article class="ticket-card">
+          <div class="ticket-main">
+            <div class="ticket-meta-top">
+              <span class="serial-no">NO.036</span>
+              <time class="ticket-date">2026.10.24</time>
+            </div>
+            <p class="ticket-message">
+              实体票据的撕裂虚线与邮戳细节太戳人了，有种把数字留言真正打印出来归档的仪式感。
+            </p>
+          </div>
+          <div class="ticket-perforation"><div class="perforation-line"></div></div>
+          <footer class="ticket-stub">
+            <div class="author-wrap">
+              <span class="author-dot"></span>
+              <span class="author-name">林知夏</span>
+            </div>
+            <div class="ip-postmark">
+              <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+              <span>中国 · 北京</span>
+            </div>
+          </footer>
+        </article>
+
+        <article class="ticket-card">
+          <div class="ticket-main">
+            <div class="ticket-meta-top">
+              <span class="serial-no">NO.035</span>
+              <time class="ticket-date">2026.10.18</time>
+            </div>
+            <p class="ticket-message">
+              从你的视频一路追过来，每一期内容都能感受到对产品与效率的深度思考，祝越来越好！
+            </p>
+          </div>
+          <div class="ticket-perforation"><div class="perforation-line"></div></div>
+          <footer class="ticket-stub">
+            <div class="author-wrap">
+              <span class="author-dot"></span>
+              <span class="author-name">Kaito_M</span>
+            </div>
+            <div class="ip-postmark">
+              <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+              <span>日本 · 京都</span>
+            </div>
+          </footer>
+        </article>
+      </div>
+
+      <!-- 第二排 -->
+      <div class="stage-row" id="row-bottom">
+        <article class="ticket-card">
+          <div class="ticket-main">
+            <div class="ticket-meta-top">
+              <span class="serial-no">NO.034</span>
+              <time class="ticket-date">2026.10.11</time>
+            </div>
+            <p class="ticket-message">
+              像翻阅实体档案盒一样把每张票据抽出审阅，这种克制而有温度的交互设计太让人惊喜了。
+            </p>
+          </div>
+          <div class="ticket-perforation"><div class="perforation-line"></div></div>
+          <footer class="ticket-stub">
+            <div class="author-wrap">
+              <span class="author-dot"></span>
+              <span class="author-name">南风知意</span>
+            </div>
+            <div class="ip-postmark">
+              <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+              <span>中国 · 广州</span>
+            </div>
+          </footer>
+        </article>
+
+        <article class="ticket-card">
+          <div class="ticket-main">
+            <div class="ticket-meta-top">
+              <span class="serial-no">NO.033</span>
+              <time class="ticket-date">2026.10.03</time>
+            </div>
+            <p class="ticket-message">
+              少即是多，慢即是快。愿这里永远保持这份安静沉淀的力量，持续关注中。
+            </p>
+          </div>
+          <div class="ticket-perforation"><div class="perforation-line"></div></div>
+          <footer class="ticket-stub">
+            <div class="author-wrap">
+              <span class="author-dot"></span>
+              <span class="author-name">温言</span>
+            </div>
+            <div class="ip-postmark">
+              <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+              <span>新加坡</span>
+            </div>
+          </footer>
+        </article>
+
+        <article class="ticket-card">
+          <div class="ticket-main">
+            <div class="ticket-meta-top">
+              <span class="serial-no">NO.032</span>
+              <time class="ticket-date">2026.09.26</time>
+            </div>
+            <p class="ticket-message">
+              把每一条访客留言做成实体票根归档，这种仪式感让人忍不住想认真写下几句话。
+            </p>
+          </div>
+          <div class="ticket-perforation"><div class="perforation-line"></div></div>
+          <footer class="ticket-stub">
+            <div class="author-wrap">
+              <span class="author-dot"></span>
+              <span class="author-name">周屿白</span>
+            </div>
+            <div class="ip-postmark">
+              <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+              <span>中国 · 南京</span>
+            </div>
+          </footer>
+        </article>
+
+        <article class="ticket-card">
+          <div class="ticket-main">
+            <div class="ticket-meta-top">
+              <span class="serial-no">NO.031</span>
+              <time class="ticket-date">2026.09.19</time>
+            </div>
+            <p class="ticket-message">
+              Clean typography, calm tea-green palette, and tactile ticket stubs. Truly inspiring work!
+            </p>
+          </div>
+          <div class="ticket-perforation"><div class="perforation-line"></div></div>
+          <footer class="ticket-stub">
+            <div class="author-wrap">
+              <span class="author-dot"></span>
+              <span class="author-name">Elena_V</span>
+            </div>
+            <div class="ip-postmark">
+              <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+              <span>德国 · 柏林</span>
+            </div>
+          </footer>
+        </article>
+
+        <article class="ticket-card">
+          <div class="ticket-main">
+            <div class="ticket-meta-top">
+              <span class="serial-no">NO.030</span>
+              <time class="ticket-date">2026.09.11</time>
+            </div>
+            <p class="ticket-message">
+              茶绿色调配白底纸质质感真的百看不厌，每次刷到新文章都会第一时间点进来细读。
+            </p>
+          </div>
+          <div class="ticket-perforation"><div class="perforation-line"></div></div>
+          <footer class="ticket-stub">
+            <div class="author-wrap">
+              <span class="author-dot"></span>
+              <span class="author-name">陆星野</span>
+            </div>
+            <div class="ip-postmark">
+              <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+              <span>中国 · 武汉</span>
+            </div>
+          </footer>
+        </article>
+
+        <article class="ticket-card">
+          <div class="ticket-main">
+            <div class="ticket-meta-top">
+              <span class="serial-no">NO.029</span>
+              <time class="ticket-date">2026.09.04</time>
+            </div>
+            <p class="ticket-message">
+              反向对流滚动的交互太丝滑了，既整齐又有层次，比传统单向轮播高级太多！
+            </p>
+          </div>
+          <div class="ticket-perforation"><div class="perforation-line"></div></div>
+          <footer class="ticket-stub">
+            <div class="author-wrap">
+              <span class="author-dot"></span>
+              <span class="author-name">许清和</span>
+            </div>
+            <div class="ip-postmark">
+              <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+              <span>中国 · 苏州</span>
+            </div>
+          </footer>
+        </article>
+
+        <article class="ticket-card">
+          <div class="ticket-main">
+            <div class="ticket-meta-top">
+              <span class="serial-no">NO.028</span>
+              <time class="ticket-date">2026.08.27</time>
+            </div>
+            <p class="ticket-message">
+              好内容值得被认真对待，祝你的个人独立站越办越好，期待更多效率神器测评！
+            </p>
+          </div>
+          <div class="ticket-perforation"><div class="perforation-line"></div></div>
+          <footer class="ticket-stub">
+            <div class="author-wrap">
+              <span class="author-dot"></span>
+              <span class="author-name">沈听风</span>
+            </div>
+            <div class="ip-postmark">
+              <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+              <span>中国 · 厦门</span>
+            </div>
+          </footer>
+        </article>
+
+        <article class="ticket-card">
+          <div class="ticket-main">
+            <div class="ticket-meta-top">
+              <span class="serial-no">NO.027</span>
+              <time class="ticket-date">2026.08.19</time>
+            </div>
+            <p class="ticket-message">
+              在喧嚣的网络世界里留下一处安静的角落，每次来访都像喝了一杯温热的清茶。
+            </p>
+          </div>
+          <div class="ticket-perforation"><div class="perforation-line"></div></div>
+          <footer class="ticket-stub">
+            <div class="author-wrap">
+              <span class="author-dot"></span>
+              <span class="author-name">顾念之</span>
+            </div>
+            <div class="ip-postmark">
+              <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+              <span>澳大利亚 · 悉尼</span>
+            </div>
+          </footer>
+        </article>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 底部极简分页与双向滑轨控制器 -->
+  <footer class="stage-footer">
+    <div class="page-dots" id="page-dots"></div>
+    <div class="nav-group">
+      <span class="nav-hint">DRAG OR SCROLL</span>
+      <button class="nav-btn" id="btn-prev" aria-label="上一组">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <button class="nav-btn" id="btn-next" aria-label="下一组">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+  </footer>
+
+  <!-- =================================================================
+       毛玻璃背景遮罩 + 从右下角极简触发器上方展开的「待签发实体档案票据」
+  ================================================================= -->
+  <div class="composer-backdrop" id="composer-backdrop" aria-hidden="true"></div>
+
+  <form class="composer-ticket" id="composer-form" aria-hidden="true">
+    <div class="composer-main">
+      <div class="composer-meta-top">
+        <span class="serial-badge">
+          <span class="pulse-dot"></span>
+          <span id="draft-serial">DRAFT · NO.043</span>
+        </span>
+        <div class="meta-right-info">
+          <span id="char-counter">0 / 140</span>
+          <time>2026.11.19</time>
+        </div>
+      </div>
+
+      <!-- 字段 1：留言框 -->
+      <textarea
+        class="message-textarea"
+        id="message-input"
+        maxlength="140"
+        placeholder="写下你的想法、灵感或此刻的共鸣，签发归档至展柜..."
+        required
+      ></textarea>
+    </div>
+
+    <div class="modal-perforation"><div class="perforation-line"></div></div>
+
+    <div class="composer-stub">
+      <div class="stub-section-head">
+        <span>CATEGORY STAMP</span>
+        <span>08 TAGS</span>
+      </div>
+
+      <!-- 字段 2：多分类 4×2 矩阵邮戳选择器 -->
+      <div class="category-matrix" role="radiogroup" aria-label="选择留言分类">
+        <button type="button" class="cat-stamp active" data-cat="随感" aria-checked="true">
+          <span class="stamp-diamond"></span>随感
+        </button>
+        <button type="button" class="cat-stamp" data-cat="灵感" aria-checked="false">
+          <span class="stamp-diamond"></span>灵感
+        </button>
+        <button type="button" class="cat-stamp" data-cat="工具" aria-checked="false">
+          <span class="stamp-diamond"></span>工具
+        </button>
+        <button type="button" class="cat-stamp" data-cat="问候" aria-checked="false">
+          <span class="stamp-diamond"></span>问候
+        </button>
+        <button type="button" class="cat-stamp" data-cat="设计" aria-checked="false">
+          <span class="stamp-diamond"></span>设计
+        </button>
+        <button type="button" class="cat-stamp" data-cat="效率" aria-checked="false">
+          <span class="stamp-diamond"></span>效率
+        </button>
+        <button type="button" class="cat-stamp" data-cat="建议" aria-checked="false">
+          <span class="stamp-diamond"></span>建议
+        </button>
+        <button type="button" class="cat-stamp" data-cat="吐槽" aria-checked="false">
+          <span class="stamp-diamond"></span>吐槽
+        </button>
+      </div>
+
+      <div class="stub-action-row">
+        <span class="selected-hint">已选印章：<strong id="selected-cat-text">随感</strong></span>
+        <button type="submit" class="issue-btn" id="submit-btn" disabled>
+          <span>签发归档</span>
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <!-- 右下角极简 46px 磨砂玻璃微缩触发钮 -->
+  <button type="button" class="minimal-fab" id="stamp-trigger" aria-label="写下留言" aria-expanded="false">
+    <!-- 16px 极细线条书写笔图标 -->
+    <svg class="fab-icon-pen" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+    </svg>
+    <!-- 16px 极细线条关闭图标 -->
+    <svg class="fab-icon-close" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+      <path d="M18 6L6 18M6 6l12 12"/>
+    </svg>
+  </button>
+
+  <script>
+    (() => {
+      const viewport = document.getElementById('viewport');
+      const rowTop = document.getElementById('row-top');
+      const rowBottom = document.getElementById('row-bottom');
+      const dotsContainer = document.getElementById('page-dots');
+      const btnPrev = document.getElementById('btn-prev');
+      const btnNext = document.getElementById('btn-next');
+
+      const stampTrigger = document.getElementById('stamp-trigger');
+      const backdrop = document.getElementById('composer-backdrop');
+      const form = document.getElementById('composer-form');
+      const textarea = document.getElementById('message-input');
+      const counter = document.getElementById('char-counter');
+      const submitBtn = document.getElementById('submit-btn');
+      const stamps = Array.from(document.querySelectorAll('.cat-stamp'));
+      const draftSerialEl = document.getElementById('draft-serial');
+      const selectedCatText = document.getElementById('selected-cat-text');
+
+      let nextSerial = 43;
+      let selectedCategory = '随感';
+      let isComposerOpen = false;
+
+      function bindCardSheen(card) {
+        card.addEventListener('mousemove', e => {
+          const rect = card.getBoundingClientRect();
+          card.style.setProperty('--mx', `${e.clientX - rect.left}px`);
+          card.style.setProperty('--my', `${e.clientY - rect.top}px`);
+        });
+      }
+      viewport.querySelectorAll('.ticket-card').forEach(bindCardSheen);
+
+      function toggleComposer(forceState) {
+        isComposerOpen = typeof forceState === 'boolean' ? forceState : !isComposerOpen;
+        stampTrigger.classList.toggle('is-active', isComposerOpen);
+        stampTrigger.setAttribute('aria-expanded', String(isComposerOpen));
+        backdrop.classList.toggle('is-open', isComposerOpen);
+        backdrop.setAttribute('aria-hidden', String(!isComposerOpen));
+        form.classList.toggle('is-open', isComposerOpen);
+        form.setAttribute('aria-hidden', String(!isComposerOpen));
+
+        if (isComposerOpen) {
+          setTimeout(() => textarea.focus(), 140);
+        }
+      }
+
+      stampTrigger.addEventListener('click', () => toggleComposer());
+      backdrop.addEventListener('click', () => toggleComposer(false));
+      window.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && isComposerOpen) toggleComposer(false);
+      });
+
+      textarea.addEventListener('input', () => {
+        const len = textarea.value.trim().length;
+        counter.textContent = `${textarea.value.length} / 140`;
+        submitBtn.disabled = len === 0;
+      });
+
+      stamps.forEach(btn => {
+        btn.addEventListener('click', () => {
+          stamps.forEach(s => {
+            s.classList.remove('active');
+            s.setAttribute('aria-checked', 'false');
+          });
+          btn.classList.add('active');
+          btn.setAttribute('aria-checked', 'true');
+          selectedCategory = btn.dataset.cat;
+          selectedCatText.textContent = selectedCategory;
+        });
+      });
+
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        const text = textarea.value.trim();
+        if (!text) return;
+
+        const code = `NO.${String(nextSerial).padStart(3, '0')}`;
+        const newCard = document.createElement('article');
+        newCard.className = 'ticket-card newly-issued';
+        newCard.innerHTML = `
+          <div class="ticket-main">
+            <div class="ticket-meta-top">
+              <span class="serial-no">${code}</span>
+              <time class="ticket-date">2026.11.19</time>
+            </div>
+            <p class="ticket-message">${escapeHtml(text)}</p>
+          </div>
+          <div class="ticket-perforation"><div class="perforation-line"></div></div>
+          <footer class="ticket-stub">
+            <div class="author-wrap">
+              <span class="author-dot"></span>
+              <span class="author-name">新访客</span>
+            </div>
+            <div class="ip-postmark">
+              <svg viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+              <span>${selectedCategory} · 东京</span>
+            </div>
+          </footer>
+        `;
+
+        bindCardSheen(newCard);
+        rowTop.insertBefore(newCard, rowTop.firstChild);
+
+        nextSerial += 1;
+        draftSerialEl.textContent = `DRAFT · NO.${String(nextSerial).padStart(3, '0')}`;
+
+        textarea.value = '';
+        counter.textContent = '0 / 140';
+        submitBtn.disabled = true;
+        toggleComposer(false);
+        measure();
+        targetProgress = 0;
+      });
+
+      function escapeHtml(str) {
+        return str.replace(/[&<>"']/g, m => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[m]));
+      }
+
+      // 双排对称双向视差引擎
+      let currentProgress = 0;
+      let targetProgress = 0;
+      let maxScroll = 0;
+      let stepWidth = 0;
+      let visibleCols = 4;
+      let pills = [];
+
+      let isDragging = false;
+      let startMouseX = 0;
+      let startProgress = 0;
+
+      function measure() {
+        const topCards = Array.from(rowTop.querySelectorAll('.ticket-card'));
+        const viewportInner = viewport.clientWidth - 80;
+        if (topCards.length > 0) {
+          stepWidth = topCards[0].offsetWidth + 24;
+          visibleCols = Math.max(1, Math.round(viewportInner / stepWidth));
+        }
+        maxScroll = Math.max(0, rowTop.scrollWidth - viewportInner);
+        targetProgress = Math.max(0, Math.min(maxScroll, targetProgress));
+
+        const totalPages = Math.max(1, Math.ceil(topCards.length / visibleCols));
+        dotsContainer.innerHTML = '';
+        pills = [];
+        for (let i = 0; i < totalPages; i++) {
+          const pill = document.createElement('button');
+          pill.type = 'button';
+          pill.className = 'page-pill';
+          pill.setAttribute('aria-label', `第 ${i + 1} 组`);
+          pill.addEventListener('click', () => {
+            targetProgress = Math.min(maxScroll, i * visibleCols * stepWidth);
+          });
+          dotsContainer.appendChild(pill);
+          pills.push(pill);
+        }
+      }
+
+      function snapToColumn() {
+        if (stepWidth <= 0) return;
+        const snapped = Math.round(targetProgress / stepWidth) * stepWidth;
+        targetProgress = Math.max(0, Math.min(maxScroll, snapped));
+      }
+
+      viewport.addEventListener('mousedown', e => {
+        isDragging = true;
+        startMouseX = e.clientX;
+        startProgress = targetProgress;
+      });
+
+      window.addEventListener('mousemove', e => {
+        if (!isDragging) return;
+        const delta = (startMouseX - e.clientX) * 1.15;
+        targetProgress = Math.max(-40, Math.min(maxScroll + 40, startProgress + delta));
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        snapToColumn();
+      });
+
+      let wheelTimer;
+      viewport.addEventListener('wheel', e => {
+        if (isComposerOpen) return;
+        const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+        if (delta !== 0) {
+          e.preventDefault();
+          targetProgress = Math.max(0, Math.min(maxScroll, targetProgress + delta * 1.1));
+          clearTimeout(wheelTimer);
+          wheelTimer = setTimeout(snapToColumn, 160);
+        }
+      }, { passive: false });
+
+      btnPrev.addEventListener('click', () => {
+        targetProgress = Math.max(0, targetProgress - visibleCols * stepWidth);
+        snapToColumn();
+      });
+
+      btnNext.addEventListener('click', () => {
+        targetProgress = Math.min(maxScroll, targetProgress + visibleCols * stepWidth);
+        snapToColumn();
+      });
+
+      function render() {
+        currentProgress += (targetProgress - currentProgress) * 0.1;
+
+        const topTranslate = -currentProgress;
+        const bottomTranslate = -(maxScroll - currentProgress);
+
+        rowTop.style.transform = `translate3d(${topTranslate}px, 0, 0)`;
+        rowBottom.style.transform = `translate3d(${bottomTranslate}px, 0, 0)`;
+
+        if (pills.length > 0 && maxScroll > 0) {
+          const activePage = Math.min(
+            pills.length - 1,
+            Math.round((currentProgress / maxScroll) * (pills.length - 1))
+          );
+          pills.forEach((p, idx) => p.classList.toggle('active', idx === activePage));
+        } else if (pills.length === 1) {
+          pills[0].classList.add('active');
+        }
+
+        requestAnimationFrame(render);
+      }
+
+      window.addEventListener('resize', measure);
+      measure();
+      requestAnimationFrame(render);
+    })();
+  </script>
+
+</body>
+</html>

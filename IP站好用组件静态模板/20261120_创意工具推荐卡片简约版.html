@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>器物志 · Curated Tools</title>
+
+  <!-- Typography: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            canvas: '#F6F6F3',
+            tea: '#2B5242',
+            'tea-mist': '#EBF1EE',
+            ink: '#181A19',
+            secondary: '#6E7370',
+            muted: '#9BA19E',
+          },
+          fontFamily: {
+            sans: ['Inter', '-apple-system', '"PingFang SC"', '"Hiragino Sans GB"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', '"SF Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    :root {
+      --canvas: #F6F6F3;
+      --tea: #2B5242;
+      --tea-mist: #EBF1EE;
+      --ink: #181A19;
+      --secondary: #6E7370;
+      --muted: #9BA19E;
+      --spring: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      background-color: var(--canvas);
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background-color: var(--canvas);
+      color: var(--ink);
+      font-family: Inter, -apple-system, "PingFang SC", "Hiragino Sans GB", sans-serif;
+      font-variant-numeric: tabular-nums;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Barely-there museum archival paper grain */
+    .paper-grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 40;
+      opacity: 0.022;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* =====================================================================
+       STRICT 5-COLUMN GALLERY GRID & RESPONSIVE BREAKPOINTS
+       ===================================================================== */
+    .folio-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      column-gap: 20px;
+      row-gap: 24px;
+    }
+
+    @media (max-width: 1199px) {
+      .folio-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 959px) {
+      .folio-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 639px) {
+      .folio-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 14px;
+        row-gap: 18px;
+      }
+    }
+
+    @media (max-width: 419px) {
+      .folio-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* =====================================================================
+       SEGMENTED FILTER BAR WITH SILKY SLIDING WHITE PILL
+       ===================================================================== */
+    .seg-track {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      padding: 3px;
+      background-color: rgba(24, 26, 25, 0.045);
+      border-radius: 10px;
+      box-shadow: inset 0 0 0 1px rgba(24, 26, 25, 0.04);
+    }
+
+    .seg-pill {
+      position: absolute;
+      top: 3px;
+      left: 0;
+      height: calc(100% - 6px);
+      background-color: #FFFFFF;
+      border-radius: 7px;
+      box-shadow:
+        0 1px 2px rgba(24, 26, 25, 0.06),
+        0 2px 6px rgba(24, 26, 25, 0.04),
+        0 0 0 0.5px rgba(24, 26, 25, 0.05);
+      transform: translate3d(0, 0, 0);
+      transition:
+        transform 0.36s var(--spring),
+        width 0.36s var(--spring);
+      will-change: transform, width;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .seg-btn {
+      position: relative;
+      z-index: 1;
+      transition: color 0.2s ease;
+    }
+
+    /* Tactile minimalist pill toggle indicator */
+    .toggle-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 9999px;
+      background-color: #C2C7C4;
+      transition:
+        background-color 0.28s ease,
+        box-shadow 0.28s ease;
+    }
+
+    .toggle-active .toggle-dot {
+      background-color: var(--tea);
+      box-shadow: 0 0 0 3px rgba(43, 82, 66, 0.14);
+    }
+
+    /* =====================================================================
+       PRECISION SLIDE-OUT FOLIO ARCHITECTURE (5-PER-ROW OPTIMIZED)
+       ===================================================================== */
+    .folio-wrapper {
+      position: relative;
+      padding-top: 44px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .folio-stack {
+      position: relative;
+    }
+
+    /* ----- BACK LAYER: INNER CARD ----- */
+    .inner-card {
+      position: absolute;
+      top: -8px;
+      left: 8px;
+      right: 8px;
+      height: 86px;
+      border-radius: 12px 12px 6px 6px;
+      z-index: 1;
+      overflow: hidden;
+      transform: translate3d(0, 0, 0);
+      transition:
+        transform 0.48s var(--spring),
+        box-shadow 0.44s var(--spring);
+      will-change: transform;
+    }
+
+    /* Category 1: OSS — Matte Obsidian */
+    .inner-card--oss {
+      background-color: #1B1D1C;
+      color: #F0F2F1;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.09),
+        0 2px 8px rgba(24, 26, 25, 0.14);
+    }
+
+    /* Category 2: APP — Anodized Mist Titanium */
+    .inner-card--app {
+      background-color: #E4E9E6;
+      color: #1A1D1B;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.85),
+        inset 0 0 0 1px rgba(24, 26, 25, 0.06),
+        0 2px 8px rgba(24, 26, 25, 0.05);
+    }
+
+    /* Category 3: SKILL — Deep Tea-Green Celadon */
+    .inner-card--skill {
+      background-color: #2B5242;
+      color: #F4F7F5;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.16),
+        0 2px 10px rgba(43, 82, 66, 0.18);
+    }
+
+    /* Minimalist tactile grip hairline centered inside the 13px notch at rest */
+    .grip-hairline {
+      position: absolute;
+      top: 13px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 14px;
+      height: 1.5px;
+      border-radius: 9999px;
+      pointer-events: none;
+      transition:
+        opacity 0.2s ease,
+        transform 0.35s var(--spring);
+    }
+
+    .inner-card--oss .grip-hairline {
+      background-color: rgba(240, 242, 241, 0.28);
+    }
+
+    .inner-card--app .grip-hairline {
+      background-color: rgba(26, 29, 27, 0.22);
+    }
+
+    .inner-card--skill .grip-hairline {
+      background-color: rgba(244, 247, 245, 0.34);
+    }
+
+    /* Compact 38px revealed top action bar (fits comfortably in ~220px width) */
+    .inner-action-bar {
+      height: 38px;
+      padding: 0 9px 0 11px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      opacity: 0;
+      transform: translateY(6px);
+      pointer-events: none;
+      transition:
+        opacity 0.24s ease,
+        transform 0.42s var(--spring);
+    }
+
+    /* ----- FRONT LAYER: OUTER PORCELAIN SLEEVE ----- */
+    .sleeve-shell {
+      position: relative;
+      z-index: 2;
+      /* Whisper-soft layered ambient shadow honoring the semicircular notch cutout */
+      filter:
+        drop-shadow(0 1px 2px rgba(24, 26, 25, 0.035))
+        drop-shadow(0 8px 20px rgba(24, 26, 25, 0.045));
+      transition:
+        transform 0.44s var(--spring),
+        filter 0.44s var(--spring);
+      will-change: transform;
+    }
+
+    .sleeve-card {
+      position: relative;
+      height: 236px;
+      border-radius: 16px;
+      background-color: #FFFFFF;
+      box-shadow:
+        inset 0 0 0 1px rgba(20, 22, 20, 0.07),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+      /* Anti-aliased 13px semicircular thumb notch centered at top edge */
+      -webkit-mask-image: radial-gradient(circle 13.5px at 50% 0, transparent 12.9px, #000 13.5px);
+      mask-image: radial-gradient(circle 13.5px at 50% 0, transparent 12.9px, #000 13.5px);
+      padding: 20px 18px 16px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: box-shadow 0.32s ease;
+    }
+
+    /* Precision 1px SVG hairline matching the 13px semicircular notch */
+    .notch-rim {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 28px;
+      height: 15px;
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    /* Barely-there mouse-following specular sheen */
+    .sleeve-sheen {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0;
+      background: radial-gradient(
+        220px circle at var(--mx, 50%) var(--my, 50%),
+        rgba(43, 82, 66, 0.035) 0%,
+        rgba(255, 255, 255, 0.55) 28%,
+        transparent 68%
+      );
+      transition: opacity 0.3s ease;
+    }
+
+    .folio-wrapper:hover .sleeve-sheen {
+      opacity: 1;
+    }
+
+    /* 38px x 38px Porcelain Squircle Icon Container */
+    .icon-squircle {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #FFFFFF 0%, #F7F8F6 100%);
+      border: 1px solid rgba(20, 22, 20, 0.075);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        0 1px 3px rgba(24, 26, 25, 0.04);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: #242725;
+      transition:
+        color 0.25s ease,
+        border-color 0.25s ease,
+        box-shadow 0.25s ease;
+    }
+
+    .folio-wrapper:hover .icon-squircle {
+      color: var(--tea);
+      border-color: rgba(43, 82, 66, 0.2);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 1),
+        0 2px 6px rgba(43, 82, 66, 0.07);
+    }
+
+    /* =====================================================================
+       KINETIC HOVER & GLOBAL EXPAND PHYSICS
+       ===================================================================== */
+    .folio-wrapper:hover .inner-card,
+    .folio-wrapper:focus-visible .inner-card,
+    .grid-expanded .folio-wrapper .inner-card {
+      transform: translate3d(0, -38px, 0);
+    }
+
+    .folio-wrapper:hover .inner-card--oss,
+    .grid-expanded .folio-wrapper .inner-card--oss {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.11),
+        0 8px 20px rgba(24, 26, 25, 0.22);
+    }
+
+    .folio-wrapper:hover .inner-card--app,
+    .grid-expanded .folio-wrapper .inner-card--app {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.92),
+        inset 0 0 0 1px rgba(24, 26, 25, 0.08),
+        0 8px 18px rgba(24, 26, 25, 0.08);
+    }
+
+    .folio-wrapper:hover .inner-card--skill,
+    .grid-expanded .folio-wrapper .inner-card--skill {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 8px 20px rgba(43, 82, 66, 0.24);
+    }
+
+    .folio-wrapper:hover .grip-hairline,
+    .folio-wrapper:focus-visible .grip-hairline,
+    .grid-expanded .folio-wrapper .grip-hairline {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-4px);
+    }
+
+    .folio-wrapper:hover .inner-action-bar,
+    .folio-wrapper:focus-visible .inner-action-bar,
+    .grid-expanded .folio-wrapper .inner-action-bar {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+      transition-delay: 0.04s;
+    }
+
+    .folio-wrapper:hover .sleeve-shell,
+    .folio-wrapper:focus-visible .sleeve-shell {
+      transform: translate3d(0, -2px, 0);
+      filter:
+        drop-shadow(0 2px 4px rgba(24, 26, 25, 0.045))
+        drop-shadow(0 16px 32px rgba(24, 26, 25, 0.08));
+    }
+
+    .folio-wrapper:hover .sleeve-card,
+    .folio-wrapper:focus-visible .sleeve-card {
+      box-shadow:
+        inset 0 0 0 1px rgba(43, 82, 66, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 1);
+    }
+
+    /* Staggered wave delay during global expand/collapse */
+    .is-waving .folio-wrapper .inner-card {
+      transition-delay: var(--wave-delay, 0ms);
+    }
+
+    .is-waving .folio-wrapper .inner-action-bar {
+      transition-delay: calc(var(--wave-delay, 0ms) + 55ms);
+    }
+
+    /* Filter entrance fade */
+    @keyframes folioIn {
+      from {
+        opacity: 0;
+        transform: translate3d(0, 8px, 0);
+      }
+      to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+    }
+
+    .folio-enter {
+      animation: folioIn 0.38s var(--spring) both;
+    }
+
+    /* 2-line clamp utility */
+    .clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Minimal keycap for drawer shortcut display */
+    .drawer-kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 26px;
+      height: 25px;
+      padding: 0 7px;
+      border-radius: 6px;
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--ink);
+      background-color: #FFFFFF;
+      border: 1px solid rgba(24, 26, 25, 0.11);
+      box-shadow: 0 1px 0 rgba(24, 26, 25, 0.08);
+    }
+
+    /* =====================================================================
+       APPLE-STYLE RIGHT DETAIL DRAWER & FLOATING TOAST
+       ===================================================================== */
+    .drawer-backdrop {
+      background-color: rgba(24, 26, 25, 0.18);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.28s ease;
+    }
+
+    .drawer-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer-panel {
+      transform: translate3d(100%, 0, 0);
+      transition: transform 0.42s var(--spring);
+      will-change: transform;
+    }
+
+    .drawer-panel.open {
+      transform: translate3d(0, 0, 0);
+    }
+
+    .toast-pill {
+      transform: translate3d(-50%, 16px, 0);
+      opacity: 0;
+      pointer-events: none;
+      transition:
+        transform 0.32s var(--spring),
+        opacity 0.22s ease;
+    }
+
+    .toast-pill.show {
+      transform: translate3d(-50%, 0, 0);
+      opacity: 1;
+    }
+
+    .clean-scroll::-webkit-scrollbar {
+      width: 4px;
+    }
+    .clean-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .clean-scroll::-webkit-scrollbar-thumb {
+      background: rgba(24, 26, 25, 0.12);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="selection:bg-tea-mist selection:text-tea">
+
+  <!-- Barely-there fine paper grain -->
+  <div class="paper-grain" aria-hidden="true"></div>
+
+  <!-- Minimal Floating Bottom Toast -->
+  <div
+    id="toast"
+    role="status"
+    aria-live="polite"
+    class="toast-pill fixed bottom-7 left-1/2 z-[70] inline-flex items-center gap-2 px-4 py-2 rounded-full bg-ink text-[#F4F6F5] text-[12px] font-medium shadow-xl shadow-ink/20 border border-white/10"
+  >
+    <span class="w-1.5 h-1.5 rounded-full bg-[#4ADE80]"></span>
+    <span id="toast-msg">已复制</span>
+  </div>
+
+  <!-- Main Gallery Container (max-width: 1440px, 40px horizontal padding on desktop) -->
+  <div class="relative z-10 max-w-[1440px] mx-auto px-5 sm:px-7 lg:px-[40px] pt-12 sm:pt-16 pb-24">
+
+    <!-- ===================================================================
+         SWISS / APPLE GALLERY HEADER
+         =================================================================== -->
+    <header class="pb-7 mb-4 border-b border-ink/[0.06] flex flex-col lg:flex-row lg:items-end justify-between gap-5">
+      <!-- Left: Title & Subtitle -->
+      <div>
+        <div class="flex items-baseline gap-3">
+          <h1 class="text-[28px] sm:text-[32px] font-semibold tracking-[-0.03em] text-ink leading-none">
+            器物志
+          </h1>
+          <span class="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
+            CURATED TOOLS
+          </span>
+        </div>
+        <p class="mt-2 text-[13.5px] text-secondary leading-relaxed">
+          私藏开源项目、效率软件与 AI Skill 标本
+        </p>
+      </div>
+
+      <!-- Right: Segmented Filter Bar + Pill Toggle -->
+      <div class="flex flex-wrap items-center gap-3">
+        <nav id="seg-track" class="seg-track" aria-label="分类筛选">
+          <div id="seg-pill" class="seg-pill"></div>
+          <button
+            type="button"
+            data-filter="all"
+            class="seg-btn px-3.5 py-1.5 text-[12.5px] font-medium text-ink rounded-[7px] whitespace-nowrap"
+          >
+            全部
+          </button>
+          <button
+            type="button"
+            data-filter="oss"
+            class="seg-btn px-3.5 py-1.5 text-[12.5px] font-medium text-secondary hover:text-ink rounded-[7px] whitespace-nowrap"
+          >
+            开源
+          </button>
+          <button
+            type="button"
+            data-filter="app"
+            class="seg-btn px-3.5 py-1.5 text-[12.5px] font-medium text-secondary hover:text-ink rounded-[7px] whitespace-nowrap"
+          >
+            软件
+          </button>
+          <button
+            type="button"
+            data-filter="skill"
+            class="seg-btn px-3.5 py-1.5 text-[12.5px] font-medium text-secondary hover:text-ink rounded-[7px] whitespace-nowrap"
+          >
+            Skill
+          </button>
+        </nav>
+
+        <!-- Tactile Minimalist Pill Toggle -->
+        <button
+          id="expand-all-btn"
+          type="button"
+          aria-pressed="false"
+          class="inline-flex items-center gap-2 px-3.5 py-[7px] rounded-full bg-white hover:bg-[#FCFDFC] border border-ink/[0.08] hover:border-tea/30 shadow-[0_1px_2px_rgba(24,26,25,0.03)] text-[12.5px] font-medium text-ink transition-all duration-200"
+        >
+          <span class="toggle-dot" aria-hidden="true"></span>
+          <span id="expand-all-text">展开全部内芯</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ===================================================================
+         5-COLUMN SLIDE-OUT FOLIO GRID (2 BALANCED ROWS OF 5)
+         =================================================================== -->
+    <main>
+      <div id="folio-grid" class="folio-grid">
+        <!-- 10 cards rendered dynamically -->
+      </div>
+    </main>
+
+    <!-- Quiet Gallery Footer -->
+    <footer class="mt-20 pt-5 border-t border-ink/[0.05] flex flex-col sm:flex-row items-center justify-between gap-2 text-[12px] text-muted">
+      <span>悬停滑出快捷内芯 · 点击封套阅读站长手记</span>
+      <span class="font-mono text-[11px] tracking-[0.12em]">10 SPECIMENS · ARCHIVE</span>
+    </footer>
+  </div>
+
+  <!-- ===================================================================
+       APPLE-STYLE RIGHT DETAIL DRAWER (440px)
+       =================================================================== -->
+  <div id="drawer-backdrop" class="drawer-backdrop fixed inset-0 z-50" aria-hidden="true"></div>
+
+  <aside
+    id="drawer-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="drawer-title"
+    class="drawer-panel fixed top-0 right-0 z-50 h-full w-full max-w-[440px] bg-white border-l border-ink/[0.07] shadow-2xl shadow-ink/15 flex flex-col"
+  >
+    <!-- Top 3px Category Accent Bar -->
+    <div id="drawer-accent-bar" class="h-[3px] w-full shrink-0"></div>
+
+    <!-- Drawer Top Header -->
+    <div id="drawer-header" class="px-7 pt-6 pb-5 border-b border-ink/[0.06] shrink-0">
+      <!-- Populated dynamically -->
+    </div>
+
+    <!-- Scrollable Editorial Content -->
+    <div id="drawer-body" class="clean-scroll flex-1 overflow-y-auto px-7 py-6 space-y-6">
+      <!-- Populated dynamically -->
+    </div>
+
+    <!-- Full-Width Primary CTA Footer -->
+    <div id="drawer-footer" class="px-7 py-5 border-t border-ink/[0.06] bg-canvas/60 shrink-0">
+      <!-- Populated dynamically -->
+    </div>
+  </aside>
+
+  <!-- ===================================================================
+       CURATED DATA & INTERACTION ENGINE
+       =================================================================== -->
+  <script>
+    /**
+     * Bespoke Minimal Monochrome SVG Icons (1.55px stroke, 18px x 18px)
+     */
+    const ICONS = {
+      raycast: `<svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17.5 17.5 5"/><path d="M12.5 5H19v6.5"/><path d="M4.5 11.5 8 15"/><path d="M9 16l3.5 3.5"/><circle cx="7.5" cy="7.5" r="1.8"/></svg>`,
+      excalidraw: `<svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 4.5 19.5 8.5 8.5 19.5 4 20l.5-4.5L15.5 4.5Z"/><path d="M13 7l4 4"/><path d="M4 20h16"/></svg>`,
+      'ui-craft': `<svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><path d="M17 13.5v7M13.5 17h7"/></svg>`,
+      cleanshot: `<svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M20 16v2a2 2 0 0 1-2 2h-2"/><path d="M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></svg>`,
+      'shadcn-vue': `<svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18.5" y1="5.5" x2="5.5" y2="18.5"/><line x1="19" y1="12" x2="12" y2="19"/><line x1="12" y1="5" x2="5" y2="12"/></svg>`,
+      'weekly-note': `<svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 14 9l5.5 2-5.5 2-2 5.5-2-5.5-5.5-2L10 9l2-5.5Z"/><path d="M18.5 16.5v3M17 18h3"/></svg>`,
+      orbstack: `<svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><ellipse cx="12" cy="12" rx="8.5" ry="3.3" transform="rotate(-24 12 12)"/><circle cx="12" cy="12" r="2"/></svg>`,
+      bun: `<svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3 5.5 13.5H12L11 21l7.5-10.5H12L13 3Z"/></svg>`,
+      'git-commit': `<svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.5" cy="6.5" r="2.2"/><circle cx="17.5" cy="6.5" r="2.2"/><circle cx="6.5" cy="17.5" r="2.2"/><path d="M6.5 8.7v6.6"/><path d="M17.5 8.7c0 4.5-4 4.3-11 4.3"/></svg>`,
+      obsidian: `<svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 3 19 8.5 16.5 19.5 7.5 19.5 5 8.5"/><polyline points="12 3 14.5 11.5 16.5 19.5"/><polyline points="5 8.5 14.5 11.5 19 8.5"/></svg>`,
+    };
+
+    const COPY_ICON = `<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+    const CHECK_ICON = `<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+    /**
+     * 10 Curated High-Taste Specimens (2 balanced rows of 5 on desktop)
+     */
+    const SPECIMENS = [
+      {
+        index: '01',
+        id: 'raycast',
+        category: 'app',
+        categoryTag: 'APP',
+        categoryName: '精选软件',
+        name: 'Raycast',
+        summary: 'macOS 终极效率启动器，用键盘串联所有工作流。',
+        meta: 'macOS',
+        quickLabel: '⌘ Space',
+        shortcut: ['⌘', 'Space'],
+        note: '装上它的第一周，我就彻底关掉了系统自带的 Spotlight。它不是简单的搜索框，而是整台 Mac 的键盘中枢。',
+        highlights: [
+          '原生 Swift 构建，应用启动、窗口分屏与计算几乎零延迟',
+          '免费版自带剪贴板历史与 Snippets，直接替代数款常驻工具',
+          '高审美插件市场，键盘一键联动 GitHub、Linear 与本地脚本',
+        ],
+        url: 'https://www.raycast.com/',
+      },
+      {
+        index: '02',
+        id: 'excalidraw',
+        category: 'oss',
+        categoryTag: 'OSS',
+        categoryName: '开源项目',
+        name: 'Excalidraw',
+        summary: '极简手绘风格白板，画架构图与脑暴零心理负担。',
+        meta: '★ 89.2k',
+        cli: 'npx excalidraw',
+        note: '很多时候不是画不出架构图，而是被刻板的矢量工具劝退了。它自带纸笔的松弛感，随手拉几个方框都很好看。',
+        highlights: [
+          '手绘线条自然克制，适合系统架构、流程图与产品早期草图',
+          '打开网页即画，支持端到端加密的实时多人协作白板',
+          '导出 SVG / PNG 边缘极净，并支持将可编辑源码嵌入图片',
+        ],
+        url: 'https://excalidraw.com/',
+      },
+      {
+        index: '03',
+        id: 'ui-craft',
+        category: 'skill',
+        categoryTag: 'SKILL',
+        categoryName: 'AI Skill',
+        name: '极简 UI 重构师',
+        summary: '消除页面廉价 AI 味，按 Apple 级留白与层级重构界面。',
+        meta: 'Prompt',
+        trigger: '/ui-craft',
+        prompt: `# Skill: /ui-craft — 极简 UI 重构师
+请以 Apple 与 Dieter Rams 的极简工业设计准则重构我提供的页面代码：
+1. 去除廉价 AI 模板味：禁用刺眼霓虹渐变、无意义光晕与堆砌徽章；用中性画布与克制强调色建立秩序。
+2. 雕琢边界与厚度：善用 1px 低透明度描边、微弱顶部内高光与轻柔多层漫反射阴影。
+3. 严控字号与留白：清晰区分主标题、正文与等宽元信息层级，启用 tabular-nums，留足呼吸感。
+4. 动效克制顺滑：统一使用 cubic-bezier(0.22, 1, 0.36, 1) 弹性曲线，只为核心交互提供细腻反馈。`,
+        note: '一个页面写完后，往往只差最后 10% 的留白与材质微调就能脱胎换骨。这个 Skill 像一位挑剔的设计总监，专门帮你做高级减法。',
+        highlights: [
+          '精准诊断“AI 生成感”病灶，给出可直接落地的 CSS 材质改造方案',
+          '适合配置为 Cursor Rule 或 Claude Project 长期规则持续把关',
+          '对个人主页、独立工具站与作品集的视觉完成度提升显著',
+        ],
+        url: 'https://github.com/anthropics/skills',
+      },
+      {
+        index: '04',
+        id: 'cleanshot',
+        category: 'app',
+        categoryTag: 'APP',
+        categoryName: '精选软件',
+        name: 'CleanShot X',
+        summary: '像素级截屏、标注与丝滑录屏，内容创作者必备。',
+        meta: 'macOS',
+        quickLabel: '⌘ ⇧ 4',
+        shortcut: ['⌘', '⇧', '4'],
+        note: '只要你写技术博客、做产品演示或经常反馈界面细节，它带来的每一秒顺滑与每一张体面截图都值回票价。',
+        highlights: [
+          '一键隐藏杂乱桌面图标，截图与录屏再也不用临时收拾桌面',
+          '内置优雅背景衬底、圆角阴影与智能打码，截完即成品图',
+          '集滚动长截图、丝滑 GIF/MP4 录屏与本地 OCR 于一身',
+        ],
+        url: 'https://cleanshot.com/',
+      },
+      {
+        index: '05',
+        id: 'shadcn-vue',
+        category: 'oss',
+        categoryTag: 'OSS',
+        categoryName: '开源项目',
+        name: 'shadcn-vue',
+        summary: '源码级可复制的 Vue 组件集合，兼顾美学与完全掌控感。',
+        meta: '★ 6.8k',
+        cli: 'npx shadcn-vue',
+        note: '它改变了前端组件库的选型逻辑——不再把样式锁死在黑盒依赖里，而是把打磨到位的源码直接交到你手里自由雕琢。',
+        highlights: [
+          '基于 Reka UI 无头原语与 Tailwind CSS，无障碍与键盘焦点极其扎实',
+          '默认极简中性配色极度耐看，微调设计变量即可贴合个人品牌',
+          '源码直接进入项目目录，告别层层覆盖组件库样式的维护负担',
+        ],
+        url: 'https://www.shadcn-vue.com/',
+      },
+      {
+        index: '06',
+        id: 'weekly-note',
+        category: 'skill',
+        categoryTag: 'SKILL',
+        categoryName: 'AI Skill',
+        name: '周刊灵感提炼官',
+        summary: '将零散笔记与长文萃取为高密度、有人味儿的周刊短评。',
+        meta: 'Prompt',
+        trigger: '/weekly-note',
+        prompt: `# Skill: /weekly-note — 周刊灵感提炼官
+请将我提供的零散阅读划线、链接与随想萃取为可直接发布的独立周刊短评：
+1. 去水留精：剔除空泛客套与重复铺垫，保留最具启发性的观点、数据或反常识细节。
+2. 编辑语感：保持克制、温和、有个人立场的杂志专栏口吻，每条控制在 100–160 字。
+3. 清晰编排：输出精炼小标题 + 一句话核心价值 + 一句延伸思考。`,
+        note: '收藏夹里攒了一周的好文章却总懒得动笔整理。用它过滤一遍，十分钟就能产出一期耐读的个人周刊草稿。',
+        highlights: [
+          '彻底摆脱呆板的“AI 总结腔”，保持独立作者的克制语感',
+          '自动统一多篇零散素材的叙事节奏，直接可粘贴至 Newsletter',
+          '非常适合个人周刊、团队双周分享与月度阅读复盘',
+        ],
+        url: 'https://github.com/anthropics/skills',
+      },
+      {
+        index: '07',
+        id: 'orbstack',
+        category: 'app',
+        categoryTag: 'APP',
+        categoryName: '精选软件',
+        name: 'OrbStack',
+        summary: '秒级启动、极低内存占用的 Docker 与 Linux 运行环境。',
+        meta: 'macOS',
+        quickLabel: 'orb status',
+        shortcut: ['orb', 'status'],
+        note: '如果你曾被 Docker Desktop 的风扇呼啸和内存暴涨折磨过，换上它的那一刻就像给 Mac 做了一次轻量化手术。',
+        highlights: [
+          '两秒内完成容器引擎冷启动，闲置电量与内存消耗极低',
+          '自动生成 .orb.local 本地域名与 HTTPS 证书，微服务联调顺滑',
+          '内置极轻量的 Linux 虚拟机，与 macOS 文件系统和网络无缝打通',
+        ],
+        url: 'https://orbstack.dev/',
+      },
+      {
+        index: '08',
+        id: 'bun',
+        category: 'oss',
+        categoryTag: 'OSS',
+        categoryName: '开源项目',
+        name: 'Bun',
+        summary: '集运行时、打包器与包管理于一体的极速 JS 工具链。',
+        meta: '★ 75.6k',
+        cli: 'curl -fsSL bun.sh',
+        note: '当依赖安装和脚本执行都快到“眨眼即完成”时，本地开发的流畅心流就再也不会被打断了。',
+        highlights: [
+          '基于 Zig 与 JavaScriptCore，冷启动与包安装速度远超传统工具链',
+          '原生开箱支持 TypeScript、JSX、测试运行器与高性能打包器',
+          '高度兼容 Node.js 生态与 package.json，老项目几乎零成本切换',
+        ],
+        url: 'https://bun.sh/',
+      },
+      {
+        index: '09',
+        id: 'git-commit',
+        category: 'skill',
+        categoryTag: 'SKILL',
+        categoryName: 'AI Skill',
+        name: 'Git 规范提交助手',
+        summary: '读取 Diff 自动生成符合 Conventional Commits 的精炼日志。',
+        meta: 'Prompt',
+        trigger: '/git-commit',
+        prompt: `# Skill: /git-commit — Git 规范提交助手
+请分析我提供的 git diff --staged 内容，生成符合 Conventional Commits 的提交信息：
+1. 标题格式：<type>(<scope>): <subject>，不超过 50 字符，祈使语气且末尾无句号。
+2. 准确区分 feat / fix / refactor / style / perf / docs / chore。
+3. 若改动跨越多个模块，在空行后用 2–3 条简短要点说明“为何这样改”。
+4. 直接输出可复制执行的 git commit 命令。`,
+        note: '清晰的提交历史是写给半年后自己的情书。用它告别随手敲下的“fix bug”，让仓库时间轴像出版物目录一样整洁。',
+        highlights: [
+          '聚焦改动意图而非流水账复述文件名，大幅提升回溯效率',
+          '严格控制标题语义与长度，便于后续自动生成 Changelog',
+          '可配合终端别名或编辑器 AI 面板，在提交前一键调用',
+        ],
+        url: 'https://github.com/anthropics/skills',
+      },
+      {
+        index: '10',
+        id: 'obsidian',
+        category: 'app',
+        categoryTag: 'APP',
+        categoryName: '精选软件',
+        name: 'Obsidian',
+        summary: '本地 Markdown 优先的双向链接知识库，掌控自己的长期记忆。',
+        meta: '全平台',
+        quickLabel: '⌘ O',
+        shortcut: ['⌘', 'O'],
+        note: '云端笔记工具来来去去，唯独躺在本地硬盘里的纯 Markdown 文件夹最让人安心。它既能极简写作，也能长成私人图书馆。',
+        highlights: [
+          '100% 本地纯文本 Markdown 存储，断网秒开且永久无厂商锁定',
+          '双向链接与局部关系图谱让跨越数年的碎片笔记自然产生联结',
+          '克制而丰富的社区插件生态，按需搭建阅读与写作工作流',
+        ],
+        url: 'https://obsidian.md/',
+      },
+    ];
+
+    /* =====================================================================
+       STATE & DOM ELEMENTS
+       ===================================================================== */
+    let activeFilter = 'all';
+    let isAllExpanded = false;
+    let activeDrawerItem = null;
+    let toastTimer = null;
+    let waveTimer = null;
+
+    const gridEl = document.getElementById('folio-grid');
+    const segBtns = document.querySelectorAll('.seg-btn');
+    const segPill = document.getElementById('seg-pill');
+
+    const expandAllBtn = document.getElementById('expand-all-btn');
+    const expandAllText = document.getElementById('expand-all-text');
+
+    const drawerBackdrop = document.getElementById('drawer-backdrop');
+    const drawerPanel = document.getElementById('drawer-panel');
+    const drawerAccentBar = document.getElementById('drawer-accent-bar');
+    const drawerHeader = document.getElementById('drawer-header');
+    const drawerBody = document.getElementById('drawer-body');
+    const drawerFooter = document.getElementById('drawer-footer');
+
+    const toastEl = document.getElementById('toast');
+    const toastMsg = document.getElementById('toast-msg');
+
+    /* =====================================================================
+       HELPERS: HTML ESCAPE, IFRAME-SAFE CLIPBOARD, TOAST
+       ===================================================================== */
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function showToast(message) {
+      toastMsg.textContent = message;
+      toastEl.classList.add('show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toastEl.classList.remove('show');
+      }, 2100);
+    }
+
+    function copyText(text, toastMessage) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.top = '-9999px';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        ta.setSelectionRange(0, text.length);
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast(ok ? toastMessage : '复制受限，请手动选择');
+        return ok;
+      } catch (err) {
+        showToast('复制失败，请手动复制');
+        return false;
+      }
+    }
+
+    /**
+     * Morph quick copy button into crisp checkmark state ("已复制")
+     */
+    function setCopiedState(btn, resetHtml) {
+      if (!btn) return;
+      btn.innerHTML = `${CHECK_ICON}<span>已复制</span>`;
+      if (btn._t) clearTimeout(btn._t);
+      btn._t = setTimeout(() => {
+        btn.innerHTML = resetHtml;
+      }, 1500);
+    }
+
+    /* =====================================================================
+       SEGMENTED FILTER PILL GEOMETRY
+       ===================================================================== */
+    function positionSegPill(btn) {
+      if (!btn) return;
+      segPill.style.width = `${btn.offsetWidth}px`;
+      segPill.style.transform = `translate3d(${btn.offsetLeft}px, 0, 0)`;
+    }
+
+    /* =====================================================================
+       COMPACT 38px INNER CARD ACTION BAR (DESIGNED FOR ~220px WIDTH)
+       ===================================================================== */
+    function renderInnerActionBar(item) {
+      if (item.category === 'oss') {
+        return `
+          <div class="flex items-center gap-1.5 min-w-0 flex-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#34D399] shrink-0"></span>
+            <code class="font-mono text-[10.5px] text-[#D2D8D5] truncate select-all">${escapeHtml(item.cli)}</code>
+          </div>
+          <button
+            type="button"
+            data-copy-id="${item.id}"
+            data-mode="oss"
+            aria-label="复制 ${escapeHtml(item.name)} 命令"
+            class="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white/[0.1] hover:bg-white/[0.18] text-[#F0F2F1] text-[10.5px] font-medium transition-colors"
+          >
+            ${COPY_ICON}
+          </button>
+        `;
+      }
+
+      if (item.category === 'app') {
+        return `
+          <span class="font-mono text-[10.5px] text-[#3B423E] truncate">
+            ${escapeHtml(item.quickLabel)}
+          </span>
+          <a
+            href="${escapeHtml(item.url)}"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-direct-link="true"
+            class="shrink-0 inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md bg-[#1A1D1B] hover:bg-tea text-[#F4F7F5] text-[10.5px] font-medium transition-colors"
+          >
+            <span>官网</span>
+            <span aria-hidden="true">↗</span>
+          </a>
+        `;
+      }
+
+      // SKILL: Deep Tea-Green Celadon
+      return `
+        <span class="font-mono text-[10.5px] text-[#E3ECE7] truncate flex-1">
+          ${escapeHtml(item.trigger)}
+        </span>
+        <button
+          type="button"
+          data-copy-id="${item.id}"
+          data-mode="skill"
+          class="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/[0.15] hover:bg-white/[0.24] text-[#F4F7F5] text-[10.5px] font-medium transition-colors"
+        >
+          <span>复制</span>
+        </button>
+      `;
+    }
+
+    /* =====================================================================
+       RENDER FOLIO CARD (ULTRA-CLEAN 5-PER-ROW ARCHITECTURE)
+       ===================================================================== */
+    function buildCardHTML(item, idx) {
+      return `
+        <article
+          class="folio-wrapper folio-enter group"
+          style="--wave-delay: ${idx * 36}ms; animation-delay: ${idx * 28}ms;"
+          data-item-id="${item.id}"
+          tabindex="0"
+          role="button"
+          aria-label="查看 ${escapeHtml(item.name)} 详情"
+        >
+          <div class="folio-stack">
+            <!-- BACK LAYER: INNER CARD -->
+            <div class="inner-card inner-card--${item.category}">
+              <div class="grip-hairline" aria-hidden="true"></div>
+              <div class="inner-action-bar">
+                ${renderInnerActionBar(item)}
+              </div>
+            </div>
+
+            <!-- FRONT LAYER: OUTER PORCELAIN WHITE SLEEVE -->
+            <div class="sleeve-shell">
+              <!-- Razor-sharp 1px SVG hairline rim around the 13px semicircular notch -->
+              <svg class="notch-rim" viewBox="0 0 28 15" fill="none" aria-hidden="true">
+                <path
+                  d="M 1 0 A 13 13 0 0 0 27 0"
+                  stroke="rgba(20, 22, 20, 0.085)"
+                  stroke-width="1"
+                />
+              </svg>
+
+              <div class="sleeve-card">
+                <!-- Barely-there mouse-following specular sheen -->
+                <div class="sleeve-sheen" aria-hidden="true"></div>
+
+                <!-- 1. Top Row: Index (01-10) & Ultra-subtle Category Label -->
+                <div class="relative z-10 flex items-center justify-between mb-5">
+                  <span class="font-mono text-[10.5px] tracking-[0.06em] text-muted">
+                    ${item.index}
+                  </span>
+                  <span class="font-mono text-[10px] tracking-[0.12em] text-muted">
+                    ${item.categoryTag}
+                  </span>
+                </div>
+
+                <!-- 2. Icon & Title Block -->
+                <div class="relative z-10 flex items-center gap-3">
+                  <div class="icon-squircle">
+                    ${ICONS[item.id]}
+                  </div>
+                  <h2 class="text-[15px] font-semibold tracking-[-0.02em] text-ink group-hover:text-tea transition-colors duration-200 truncate">
+                    ${escapeHtml(item.name)}
+                  </h2>
+                </div>
+
+                <!-- 3. Crisp 2-line Clamped Description -->
+                <p class="relative z-10 mt-3.5 text-[12.5px] leading-[1.6] text-secondary clamp-2 flex-1">
+                  ${escapeHtml(item.summary)}
+                </p>
+
+                <!-- 4. Ultra-fine Footer -->
+                <div class="relative z-10 mt-4 pt-3 border-t border-black/[0.05] flex items-center justify-between">
+                  <span class="font-mono text-[11px] text-muted truncate">
+                    ${escapeHtml(item.meta)}
+                  </span>
+                  <span
+                    class="text-[12px] text-muted group-hover:text-tea transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                    aria-hidden="true"
+                  >
+                    ↗
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderGrid() {
+      const list =
+        activeFilter === 'all'
+          ? SPECIMENS
+          : SPECIMENS.filter((item) => item.category === activeFilter);
+      gridEl.innerHTML = list.map((item, idx) => buildCardHTML(item, idx)).join('');
+    }
+
+    /* =====================================================================
+       RIGHT-SIDE DETAIL DRAWER (440px APPLE EDITORIAL STYLE)
+       ===================================================================== */
+    function renderDrawerInteractiveBlock(item) {
+      if (item.category === 'oss') {
+        return `
+          <section class="space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">安装 / 启动命令</span>
+              <button
+                type="button"
+                id="drawer-copy-btn"
+                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11.5px] font-medium bg-tea-mist text-tea hover:bg-tea hover:text-white transition-colors"
+              >
+                ${COPY_ICON}<span>复制命令</span>
+              </button>
+            </div>
+            <div class="rounded-xl bg-[#1B1D1C] px-4 py-3.5 font-mono text-[12px] text-[#F0F2F1] overflow-x-auto">
+              <span class="text-[#34D399] select-none mr-2">$</span>${escapeHtml(item.cli)}
+            </div>
+          </section>
+        `;
+      }
+
+      if (item.category === 'skill') {
+        return `
+          <section class="space-y-2.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">Skill 指令</span>
+                <span class="font-mono text-[11px] px-1.5 py-0.5 rounded bg-tea-mist text-tea">${escapeHtml(item.trigger)}</span>
+              </div>
+              <button
+                type="button"
+                id="drawer-copy-btn"
+                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11.5px] font-medium bg-tea-mist text-tea hover:bg-tea hover:text-white transition-colors"
+              >
+                ${COPY_ICON}<span>复制 Prompt</span>
+              </button>
+            </div>
+            <pre class="p-4 rounded-xl bg-canvas border border-ink/[0.07] font-mono text-[11.5px] leading-relaxed text-ink/90 whitespace-pre-wrap break-words">${escapeHtml(item.prompt)}</pre>
+          </section>
+        `;
+      }
+
+      // APP shortcut showcase
+      const keysHtml = (item.shortcut || [])
+        .map((k) => `<kbd class="drawer-kbd">${escapeHtml(k)}</kbd>`)
+        .join('<span class="text-[11px] text-muted mx-1">+</span>');
+
+      return `
+        <section class="p-4 rounded-xl bg-canvas border border-ink/[0.06] flex items-center justify-between gap-3">
+          <div>
+            <div class="font-mono text-[10.5px] uppercase tracking-[0.12em] text-muted">快捷方式 / 入口</div>
+            <div class="mt-0.5 text-[12.5px] text-secondary">支持平台：${escapeHtml(item.meta)}</div>
+          </div>
+          <div class="inline-flex items-center shrink-0">${keysHtml}</div>
+        </section>
+      `;
+    }
+
+    function openDrawer(item) {
+      activeDrawerItem = item;
+
+      const accentColors = {
+        oss: '#1B1D1C',
+        app: '#B9C4BE',
+        skill: '#2B5242',
+      };
+
+      const pillClasses = {
+        oss: 'bg-[#1B1D1C] text-[#F0F2F1]',
+        app: 'bg-[#E4E9E6] text-[#1A1D1B]',
+        skill: 'bg-[#2B5242] text-[#F4F7F5]',
+      };
+
+      drawerAccentBar.style.backgroundColor = accentColors[item.category];
+
+      drawerHeader.innerHTML = `
+        <div class="flex items-center justify-between mb-5">
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-[11px] text-muted">${item.index}</span>
+            <span class="px-2 py-0.5 rounded-full font-mono text-[10.5px] font-medium ${pillClasses[item.category]}">
+              ${item.categoryName}
+            </span>
+          </div>
+          <button
+            id="drawer-close-btn"
+            type="button"
+            aria-label="关闭详情"
+            class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-muted hover:text-ink hover:bg-canvas transition-colors"
+          >
+            <span class="font-mono text-[10px]">ESC</span>
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+              <path d="M18 6 6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3.5">
+          <div class="icon-squircle">
+            ${ICONS[item.id]}
+          </div>
+          <div class="min-w-0">
+            <h2 id="drawer-title" class="text-[20px] font-semibold tracking-[-0.025em] text-ink truncate">
+              ${escapeHtml(item.name)}
+            </h2>
+            <p class="mt-0.5 text-[13px] text-secondary leading-snug">
+              ${escapeHtml(item.summary)}
+            </p>
+          </div>
+        </div>
+      `;
+
+      const highlightsHtml = item.highlights
+        .map(
+          (text, i) => `
+            <li class="flex items-start gap-2.5 text-[13px] leading-[1.68] text-ink/85">
+              <span class="font-mono text-[10.5px] text-tea mt-[3px] shrink-0">0${i + 1}</span>
+              <span>${escapeHtml(text)}</span>
+            </li>
+          `
+        )
+        .join('');
+
+      drawerBody.innerHTML = `
+        <section class="space-y-2">
+          <h3 class="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">站长手记</h3>
+          <p class="pl-3.5 py-2.5 pr-3 rounded-r-lg bg-canvas border-l-2 border-tea text-[13.5px] leading-[1.72] text-ink/90">
+            ${escapeHtml(item.note)}
+          </p>
+        </section>
+
+        <section class="space-y-2.5">
+          <h3 class="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">核心亮点</h3>
+          <ul class="space-y-2">
+            ${highlightsHtml}
+          </ul>
+        </section>
+
+        ${renderDrawerInteractiveBlock(item)}
+      `;
+
+      drawerFooter.innerHTML = `
+        <a
+          href="${escapeHtml(item.url)}"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="w-full py-2.5 px-4 rounded-xl bg-tea hover:bg-[#224235] text-[#F4F7F5] text-[13px] font-medium flex items-center justify-center gap-1.5 shadow-sm shadow-tea/15 transition-colors"
+        >
+          <span>访问官方主页</span>
+          <span aria-hidden="true">↗</span>
+        </a>
+      `;
+
+      document.getElementById('drawer-close-btn').addEventListener('click', closeDrawer);
+
+      const drawerCopyBtn = document.getElementById('drawer-copy-btn');
+      if (drawerCopyBtn) {
+        const originalHtml = drawerCopyBtn.innerHTML;
+        drawerCopyBtn.addEventListener('click', () => {
+          const payload = item.category === 'oss' ? item.cli : item.prompt;
+          const msg =
+            item.category === 'oss'
+              ? `已复制 ${item.name} 安装命令`
+              : `已复制「${item.name}」Prompt`;
+          if (copyText(payload, msg)) {
+            setCopiedState(drawerCopyBtn, originalHtml);
+          }
+        });
+      }
+
+      drawerBackdrop.classList.add('open');
+      drawerPanel.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      drawerBody.scrollTop = 0;
+    }
+
+    function closeDrawer() {
+      drawerBackdrop.classList.remove('open');
+      drawerPanel.classList.remove('open');
+      document.body.style.overflow = '';
+      activeDrawerItem = null;
+    }
+
+    /* =====================================================================
+       EVENT WIRING
+       ===================================================================== */
+    // Segmented filter tabs
+    segBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        activeFilter = btn.dataset.filter;
+        segBtns.forEach((b) => {
+          const active = b === btn;
+          b.classList.toggle('text-ink', active);
+          b.classList.toggle('text-secondary', !active);
+        });
+        positionSegPill(btn);
+        renderGrid();
+      });
+    });
+
+    window.addEventListener('resize', () => {
+      const activeBtn = document.querySelector(`.seg-btn[data-filter="${activeFilter}"]`);
+      positionSegPill(activeBtn);
+    });
+
+    // Global "展开全部内芯" / "收回内芯" staggered wave toggle
+    expandAllBtn.addEventListener('click', () => {
+      isAllExpanded = !isAllExpanded;
+
+      gridEl.classList.add('is-waving');
+      if (waveTimer) clearTimeout(waveTimer);
+      waveTimer = setTimeout(() => {
+        gridEl.classList.remove('is-waving');
+      }, 750);
+
+      gridEl.classList.toggle('grid-expanded', isAllExpanded);
+      expandAllBtn.classList.toggle('toggle-active', isAllExpanded);
+      expandAllBtn.classList.toggle('border-tea/35', isAllExpanded);
+      expandAllBtn.setAttribute('aria-pressed', String(isAllExpanded));
+      expandAllText.textContent = isAllExpanded ? '收回内芯' : '展开全部内芯';
+    });
+
+    // Subtle mouse-following specular sheen on outer porcelain sleeve
+    gridEl.addEventListener('mousemove', (e) => {
+      const wrapper = e.target.closest('.folio-wrapper');
+      if (!wrapper) return;
+      const card = wrapper.querySelector('.sleeve-card');
+      if (!card) return;
+      const rect = card.getBoundingClientRect();
+      card.style.setProperty('--mx', `${e.clientX - rect.left}px`);
+      card.style.setProperty('--my', `${e.clientY - rect.top}px`);
+    });
+
+    // Click delegation: Inner quick actions vs. Opening detail drawer
+    gridEl.addEventListener('click', (e) => {
+      const copyBtn = e.target.closest('[data-copy-id]');
+      if (copyBtn) {
+        e.stopPropagation();
+        const item = SPECIMENS.find((x) => x.id === copyBtn.dataset.copyId);
+        if (item) {
+          const payload = item.category === 'oss' ? item.cli : item.prompt;
+          const msg =
+            item.category === 'oss'
+              ? `已复制 ${item.name} 命令`
+              : `已复制「${item.name}」指令`;
+          const resetHtml =
+            copyBtn.dataset.mode === 'oss' ? COPY_ICON : '<span>复制</span>';
+          if (copyText(payload, msg)) {
+            setCopiedState(copyBtn, resetHtml);
+          }
+        }
+        return;
+      }
+
+      const directLink = e.target.closest('[data-direct-link]');
+      if (directLink) {
+        e.stopPropagation();
+        return;
+      }
+
+      const wrapper = e.target.closest('.folio-wrapper');
+      if (wrapper) {
+        const item = SPECIMENS.find((x) => x.id === wrapper.dataset.itemId);
+        if (item) openDrawer(item);
+      }
+    });
+
+    // Keyboard accessibility for cards
+    gridEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        const wrapper = e.target.closest('.folio-wrapper');
+        if (wrapper && !e.target.closest('button, a')) {
+          e.preventDefault();
+          const item = SPECIMENS.find((x) => x.id === wrapper.dataset.itemId);
+          if (item) openDrawer(item);
+        }
+      }
+    });
+
+    // Close drawer via backdrop or ESC
+    drawerBackdrop.addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && activeDrawerItem) {
+        closeDrawer();
+      }
+    });
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      renderGrid();
+      requestAnimationFrame(() => {
+        positionSegPill(segBtns[0]);
+      });
+    });
+  </script>
+</body>
+</html>

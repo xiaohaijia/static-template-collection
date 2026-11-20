@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>「真实物理纸张折角」高阶极简 4列留言墙</title>
+  <style>
+    :root {
+      --bg-canvas: #e6ebe5;
+      --paper-front: #fcfdfb;
+      --paper-hover: #ffffff;
+      --tea-ink: #15241e;
+      --tea-core: #2b5d4b;
+      --tea-soft: #e2ece7;
+      --tea-text-body: #2a3a34;
+      --tea-text-muted: #7f918a;
+      /* 真实折角尺寸 */
+      --fold: 34px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background-color: var(--bg-canvas);
+      /* 温润矿物质画布 + 极细微纸张纤维噪点 */
+      background-image: 
+        radial-gradient(circle at 14% 12%, rgba(43, 93, 75, 0.075), transparent 40%),
+        radial-gradient(circle at 86% 88%, rgba(43, 93, 75, 0.06), transparent 42%),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", sans-serif;
+      color: var(--tea-ink);
+      padding: 52px 32px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 4列高密度秩序网格 */
+    .wall-grid {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 24px;
+    }
+
+    @media (max-width: 1180px) {
+      .wall-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 620px) {
+      .wall-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* =================================================================
+       外层物理投影壳（给整张裁切后的纸片投射柔和环境阴影）
+    ================================================================= */
+    .paper-shell {
+      position: relative;
+      filter: drop-shadow(0 10px 20px rgba(21, 36, 30, 0.06))
+              drop-shadow(0 2px 4px rgba(21, 36, 30, 0.035));
+      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                  filter 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .paper-shell:hover {
+      transform: translateY(-6px);
+      filter: drop-shadow(0 20px 34px rgba(21, 36, 30, 0.105))
+              drop-shadow(0 4px 10px rgba(43, 93, 75, 0.075));
+    }
+
+    /* =================================================================
+       纸张本体（带极细微棉浆纸纹理）
+    ================================================================= */
+    .paper-sheet {
+      --mx: 50%;
+      --my: 50%;
+      position: relative;
+      height: 100%;
+      min-height: 250px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 25px 24px 20px;
+      background-color: var(--paper-front);
+      /* 纸张表面自带极其克制的天然纤维肌理 */
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='0.018'/%3E%3C/svg%3E");
+      border-radius: 5px 0 16px 5px;
+      clip-path: polygon(
+        0 0,
+        calc(100% - var(--fold)) 0,
+        100% var(--fold),
+        100% 100%,
+        0 100%
+      );
+      transition: background-color 0.35s ease;
+    }
+
+    .paper-shell:hover .paper-sheet {
+      background-color: var(--paper-hover);
+    }
+
+    /* 1. 折页投射在纸面下方的真实半影（Cast Shadow，位于折页底层） */
+    .fold-cast-shadow {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: calc(var(--fold) + 14px);
+      height: calc(var(--fold) + 14px);
+      /* 模拟折下来的纸角挡住光线，在下方纸面上形成的柔和三角暗影 */
+      background: radial-gradient(
+        circle at 100% 0%,
+        rgba(21, 36, 30, 0.16) 0%,
+        rgba(21, 36, 30, 0.07) 42%,
+        transparent 72%
+      );
+      pointer-events: none;
+      z-index: 2;
+      transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                  height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.4s ease;
+    }
+
+    .paper-shell:hover .fold-cast-shadow {
+      width: calc(var(--fold) + 22px);
+      height: calc(var(--fold) + 22px);
+      opacity: 0.9;
+    }
+
+    /* 2. 真实物理折页三角（SVG 精密渲染：含纸张背面茶灰底色 + 纸张弯曲高光脊线 + 压痕微曲线） */
+    .realistic-fold {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: var(--fold);
+      height: var(--fold);
+      z-index: 3;
+      pointer-events: none;
+      /* 让折页自身也有微弱立体投影 */
+      filter: drop-shadow(-2px 3px 4px rgba(21, 36, 30, 0.11));
+      transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                  height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                  filter 0.4s ease;
+    }
+
+    .paper-shell:hover .realistic-fold {
+      width: 40px;
+      height: 40px;
+      filter: drop-shadow(-4px 6px 8px rgba(21, 36, 30, 0.15));
+    }
+
+    .realistic-fold svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* 指针跟随的极微弱自然漫反射光 */
+    .paper-sheen {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        260px circle at var(--mx) var(--my),
+        rgba(43, 93, 75, 0.055),
+        transparent 70%
+      );
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .paper-shell:hover .paper-sheen {
+      opacity: 1;
+    }
+
+    /* 顶部栏：日期刻度 */
+    .card-top {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding-right: 34px;
+    }
+
+    .time-tick {
+      width: 12px;
+      height: 1.5px;
+      background: var(--tea-core);
+      border-radius: 1px;
+      transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .paper-shell:hover .time-tick {
+      width: 22px;
+    }
+
+    .card-date {
+      font-family: "SF Mono", "JetBrains Mono", Menlo, monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      color: var(--tea-text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* 中部：留言内容 */
+    .card-body {
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      margin-bottom: 22px;
+    }
+
+    .card-message {
+      font-size: 14.25px;
+      line-height: 1.76;
+      color: var(--tea-text-body);
+      font-weight: 400;
+      letter-spacing: 0.012em;
+      word-break: break-word;
+    }
+
+    /* 底部落款区：名称 + IP属地 */
+    .card-footer {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(21, 36, 30, 0.065);
+    }
+
+    .author-box {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .author-gem {
+      width: 6px;
+      height: 6px;
+      background-color: var(--tea-core);
+      transform: rotate(45deg);
+      flex-shrink: 0;
+      opacity: 0.75;
+      transition: transform 0.35s ease, opacity 0.35s ease;
+    }
+
+    .paper-shell:hover .author-gem {
+      transform: rotate(135deg);
+      opacity: 1;
+    }
+
+    .author-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--tea-ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: -0.01em;
+    }
+
+    .ip-beacon {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px 4px 7px;
+      border-radius: 999px;
+      background-color: var(--tea-soft);
+      color: var(--tea-core);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      flex-shrink: 0;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .paper-shell:hover .ip-beacon {
+      background-color: var(--tea-core);
+      color: #ffffff;
+    }
+
+    .beacon-pulse {
+      position: relative;
+      width: 10px;
+      height: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .beacon-pulse::before {
+      content: "";
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .beacon-pulse::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1px solid currentColor;
+      opacity: 0.45;
+      transition: transform 0.4s ease, opacity 0.4s ease;
+    }
+
+    .paper-shell:hover .beacon-pulse::after {
+      transform: scale(1.3);
+      opacity: 0.85;
+    }
+  </style>
+</head>
+<body>
+
+  <main class="wall-grid">
+
+    <!-- 卡片 1 -->
+    <div class="paper-shell">
+      <article class="paper-sheet">
+        <div class="paper-sheen"></div>
+        <div class="fold-cast-shadow"></div>
+        <!-- 真实物理折纸角 SVG -->
+        <div class="realistic-fold" aria-hidden="true">
+          <svg viewBox="0 0 40 40" preserveAspectRatio="none">
+            <defs>
+              <!-- 模拟纸张翻折背面的光影过渡：折痕处受光泛白高光，尖端微暗且带有淡淡茶灰底色 -->
+              <linearGradient id="paper-curl-grad" x1="100%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#cfd9d3"/>
+                <stop offset="32%" stop-color="#e4ece8"/>
+                <stop offset="56%" stop-color="#ffffff"/>
+                <stop offset="78%" stop-color="#eef3f0"/>
+                <stop offset="100%" stop-color="#d5dfd9"/>
+              </linearGradient>
+            </defs>
+            <!-- 带有轻微自然弧度的真实折页形状 -->
+            <path d="M 0,0 Q 3,18 4,34 C 18,35 32,37 40,40 L 0,0 Z" fill="url(#paper-curl-grad)"/>
+            <!-- 折痕边缘 0.6px 极细受光高光丝 -->
+            <path d="M 0,0 Q 3,18 4,34 C 18,35 32,37 40,40" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="0.7"/>
+          </svg>
+        </div>
+
+        <div class="card-top">
+          <span class="time-tick"></span>
+          <time class="card-date">2026.11.17</time>
+        </div>
+        <div class="card-body">
+          <p class="card-message">
+            好的界面像清晨推开窗时的空气，干净、有分寸感，不打扰思考。这里的留白让人觉得被温柔对待。
+          </p>
+        </div>
+        <footer class="card-footer">
+          <div class="author-box">
+            <span class="author-gem"></span>
+            <span class="author-name">林深见鹿</span>
+          </div>
+          <div class="ip-beacon">
+            <span class="beacon-pulse"></span>
+            <span>东京</span>
+          </div>
+        </footer>
+      </article>
+    </div>
+
+    <!-- 卡片 2 -->
+    <div class="paper-shell">
+      <article class="paper-sheet">
+        <div class="paper-sheen"></div>
+        <div class="fold-cast-shadow"></div>
+        <div class="realistic-fold" aria-hidden="true">
+          <svg viewBox="0 0 40 40" preserveAspectRatio="none">
+            <path d="M 0,0 Q 3,18 4,34 C 18,35 32,37 40,40 L 0,0 Z" fill="url(#paper-curl-grad)"/>
+            <path d="M 0,0 Q 3,18 4,34 C 18,35 32,37 40,40" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="0.7"/>
+          </svg>
+        </div>
+
+        <div class="card-top">
+          <span class="time-tick"></span>
+          <time class="card-date">2026.11.15</time>
+        </div>
+        <div class="card-body">
+          <p class="card-message">
+            顺着效率工具的文章一路摸过来，主理人对极简美学的执念已经渗透到每个像素里了，茶绿越看越耐看。
+          </p>
+        </div>
+        <footer class="card-footer">
+          <div class="author-box">
+            <span class="author-gem"></span>
+            <span class="author-name">周屿白</span>
+          </div>
+          <div class="ip-beacon">
+            <span class="beacon-pulse"></span>
+            <span>上海</span>
+          </div>
+        </footer>
+      </article>
+    </div>
+
+    <!-- 卡片 3 -->
+    <div class="paper-shell">
+      <article class="paper-sheet">
+        <div class="paper-sheen"></div>
+        <div class="fold-cast-shadow"></div>
+        <div class="realistic-fold" aria-hidden="true">
+          <svg viewBox="0 0 40 40" preserveAspectRatio="none">
+            <path d="M 0,0 Q 3,18 4,34 C 18,35 32,37 40,40 L 0,0 Z" fill="url(#paper-curl-grad)"/>
+            <path d="M 0,0 Q 3,18 4,34 C 18,35 32,37 40,40" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="0.7"/>
+          </svg>
+        </div>
+
+        <div class="card-top">
+          <span class="time-tick"></span>
+          <time class="card-date">2026.11.12</time>
+        </div>
+        <div class="card-body">
+          <p class="card-message">
+            在这个追求快节奏的时代，能静下心打磨细节的人越来越少。愿你永远保持这份对秩序与美感的敏锐。
+          </p>
+        </div>
+        <footer class="card-footer">
+          <div class="author-box">
+            <span class="author-gem"></span>
+            <span class="author-name">Elena Vance</span>
+          </div>
+          <div class="ip-beacon">
+            <span class="beacon-pulse"></span>
+            <span>伦敦</span>
+          </div>
+        </footer>
+      </article>
+    </div>
+
+    <!-- 卡片 4 -->
+    <div class="paper-shell">
+      <article class="paper-sheet">
+        <div class="paper-sheen"></div>
+        <div class="fold-cast-shadow"></div>
+        <div class="realistic-fold" aria-hidden="true">
+          <svg viewBox="0 0 40 40" preserveAspectRatio="none">
+            <path d="M 0,0 Q 3,18 4,34 C 18,35 32,37 40,40 L 0,0 Z" fill="url(#paper-curl-grad)"/>
+            <path d="M 0,0 Q 3,18 4,34 C 18,35 32,37 40,40" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="0.7"/>
+          </svg>
+        </div>
+
+        <div class="card-top">
+          <span class="time-tick"></span>
+          <time class="card-date">2026.11.09</time>
+        </div>
+        <div class="card-body">
+          <p class="card-message">
+            刚刚用你推荐的工作流跑通了本地自动化，每天省下半小时机械操作，特地上来留个坐标表示感谢！
+          </p>
+        </div>
+        <footer class="card-footer">
+          <div class="author-box">
+            <span class="author-gem"></span>
+            <span class="author-name">陈默然</span>
+          </div>
+          <div class="ip-beacon">
+            <span class="beacon-pulse"></span>
+            <span>杭州</span>
+          </div>
+        </footer>
+      </article>
+    </div>
+
+    <!-- 卡片 5 -->
+    <div class="paper-shell">
+      <article class="paper-sheet">
+        <div class="paper-sheen"></div>
+        <div class="fold-cast-shadow"></div>
+        <div class="realistic-fold" aria-hidden="true">
+          <svg viewBox="0 0 40 40" preserveAspectRatio="none">
+            <path d="M 0,0 Q 3,18 4,34 C 18,35 32,37 40,40 L 0,0 Z" fill="url(#paper-curl-grad)"/>
+            <path d="M 0,0 Q 3,18 4,34 C 18,35 32,37 40,40" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="0.7"/>
+          </svg>
+        </div>
+
+        <div class="card-top">
+          <span class="time-tick"></span>
+          <time class="card-date">2026.11.06</time>
+        </div>
+        <div class="card-body">
+          <p class="card-message">
+            每一张卡片都像一枚折叠好的时间胶囊，把不同城市、不同夜晚的共鸣安静地封存在同一片茶绿里。
+          </p>
+        </div>
+        <footer class="card-footer">
+          <div class="author-box">
+            <span class="author-gem"></span>
+            <span class="author-name">南风知意</span>
+          </div>
+          <div class="ip-beacon">
+            <span class="beacon-pulse"></span>
+            <span>深圳</span>
+          </div>
+        </footer>
+      </article>
+    </div>
+
+    <!-- 卡片 6 -->
+    <div class="paper-shell">
+      <article class="paper-sheet">
+        <div class="paper-sheen"></div>
+        <div class="fold-cast-shadow"></div>
+        <div class="realistic-fold" aria-hidden="true">
+          <svg viewBox="0 0 40 40" preserveAspectRatio="none">
+            <path d="M 0,0 Q 3,18 4,34 C 18,35 32,37 40,40 L 0,0 Z" fill="url(#paper-curl-grad)"/>
+            <path d="M 0,0 Q 3,18 4,34 C 18,35 32,37 40,40" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="0.7"/>
+          </svg>
+        </div>
+
+        <div class="card-top">
+          <span class="time-tick"></span>
+          <time class="card-date">2026.11.03</time>
+        </div>
+        <div class="card-body">
+          <p class="card-message">
+            不喧哗，自有声。期待看到更多关于产品思考与独立开发的深度拆解，已设为浏览器首页常驻。
+          </p>
+        </div>
+        <footer class="card-footer">
+          <div class="author-box">
+            <span class="author-gem"></span>
+            <span class="author-name">Kaito_M</span>
+          </div>
+          <div class="ip-beacon">
+            <span class="beacon-pulse"></span>
+            <span>京都</span>
+          </div>
+        </footer>
+      </article>
+    </div>
+
+    <!-- 卡片 7 -->
+    <div class="paper-shell">
+      <article class="paper-sheet">
+        <div class="paper-sheen"></div>
+        <div class="fold-cast-shadow"></div>
+        <div class="realistic-fold" aria-hidden="true">
+          <svg viewBox="0 0 40 40" preserveAspectRatio="none">
+            <path d="M 0,0 Q 3,18 4,34 C 18,35 32,37 40,40 L 0,0 Z" fill="url(#paper-curl-grad)"/>
+            <path d="M 0,0 Q 3,18 4,34 C 18,35 32,37 40,40" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="0.7"/>
+          </svg>
+        </div>
+
+        <div class="card-top">
+          <span class="time-tick"></span>
+          <time class="card-date">2026.10.29</time>
+        </div>
+        <div class="card-body">
+          <p class="card-message">
+            从你的视频一路追到个人网站，内容输出一如既往地克制且干货满满，希望能一直看到你的分享。
+          </p>
+        </div>
+        <footer class="card-footer">
+          <div class="author-box">
+            <span class="author-gem"></span>
+            <span class="author-name">苏白</span>
+          </div>
+          <div class="ip-beacon">
+            <span class="beacon-pulse"></span>
+            <span>成都</span>
+          </div>
+        </footer>
+      </article>
+    </div>
+
+    <!-- 卡片 8 -->
+    <div class="paper-shell">
+      <article class="paper-sheet">
+        <div class="paper-sheen"></div>
+        <div class="fold-cast-shadow"></div>
+        <div class="realistic-fold" aria-hidden="true">
+          <svg viewBox="0 0 40 40" preserveAspectRatio="none">
+            <path d="M 0,0 Q 3,18 4,34 C 18,35 32,37 40,40 L 0,0 Z" fill="url(#paper-curl-grad)"/>
+            <path d="M 0,0 Q 3,18 4,34 C 18,35 32,37 40,40" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="0.7"/>
+          </svg>
+        </div>
+
+        <div class="card-top">
+          <span class="time-tick"></span>
+          <time class="card-date">2026.10.24</time>
+        </div>
+        <div class="card-body">
+          <p class="card-message">
+            极简不是什么都没有，而是把多余的噪音剔除后，让真正有价值的文字自己发光。
+          </p>
+        </div>
+        <footer class="card-footer">
+          <div class="author-box">
+            <span class="author-gem"></span>
+            <span class="author-name">温言</span>
+          </div>
+          <div class="ip-beacon">
+            <span class="beacon-pulse"></span>
+            <span>北京</span>
+          </div>
+        </footer>
+      </article>
+    </div>
+
+  </main>
+
+  <script>
+    document.querySelectorAll('.paper-sheet').forEach(sheet => {
+      sheet.addEventListener('mousemove', e => {
+        const rect = sheet.getBoundingClientRect();
+        sheet.style.setProperty('--mx', `${e.clientX - rect.left}px`);
+        sheet.style.setProperty('--my', `${e.clientY - rect.top}px`);
+      });
+    });
+  </script>
+
+</body>
+</html>
